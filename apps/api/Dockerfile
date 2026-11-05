@@ -32,5 +32,7 @@ COPY --from=build /app/apps/api/dist apps/api/dist
 WORKDIR /app/apps/api
 RUN mkdir -p uploads
 EXPOSE 4000
-# migrations + base seed run on every start (both are idempotent), then the API
-CMD ["sh", "-c", "pnpm exec prisma migrate deploy && pnpm exec tsx prisma/seed.ts && node dist/index.js"]
+# migrations + base seed run on every start (both are idempotent), then the API.
+# SEED_DEMO=true also (re)loads the [DEMO] sample data on start — for demos only;
+# remove the variable afterwards, because each start replaces the [DEMO] rows.
+CMD ["sh", "-c", "pnpm exec prisma migrate deploy && pnpm exec tsx prisma/seed.ts && if [ \"$SEED_DEMO\" = \"true\" ]; then pnpm exec tsx prisma/demo-seed.ts; fi && node dist/index.js"]

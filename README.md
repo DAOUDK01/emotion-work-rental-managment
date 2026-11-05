@@ -124,7 +124,9 @@ Two Railway services built from this repo (branch `main`, region EU West), datab
 Pushing to `main` redeploys both. If a push does not show up, run **Deploy latest commit** from
 the service's command palette (Ctrl+K). Migrations and the base seed run on every API start;
 the seed never overwrites existing users, so `SEED_ADMIN_PASSWORD` only matters for the very
-first start. Neon keeps point-in-time history; the volume holds uploads (Railway volume backups
+first start. For a demo, set `SEED_DEMO=true` on `api` to load the `[DEMO]` sample data on
+start; delete the variable afterwards (every start with it set replaces the `[DEMO]` rows).
+Neon keeps point-in-time history; the volume holds uploads (Railway volume backups
 are under the service's Backups tab).
 
 ## Configuration
