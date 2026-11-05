@@ -111,6 +111,22 @@ gunzip -c backups/manual-2026-11-03.sql.gz | docker compose exec -T postgres psq
 Uploaded files (receipts, agreements, photos) live in the `uploads` volume — include it in
 your VPS snapshot schedule.
 
+## Production deployment (Railway + Neon) — current live setup
+
+Two Railway services built from this repo (branch `main`, region EU West), database on Neon
+(Frankfurt). Both images are the same Dockerfiles as above.
+
+| Service | Variables (set in Railway → Variables) | Other settings |
+|---|---|---|
+| `api` | `RAILWAY_DOCKERFILE_PATH=apps/api/Dockerfile`, `PORT=4000`, `NODE_ENV=production`, `COOKIE_SECURE=true`, `UPLOAD_DIR=/app/apps/api/uploads`, `DIRECT_URL=${{DATABASE_URL}}`, `CORS_ORIGINS=https://${{web.RAILWAY_PUBLIC_DOMAIN}}`, plus the secrets `DATABASE_URL` (Neon connection string), `JWT_SECRET`, `SEED_ADMIN_PASSWORD` | volume at `/app/apps/api/uploads`, healthcheck `/api/health`, no public domain |
+| `web` | `RAILWAY_DOCKERFILE_PATH=apps/web/Dockerfile`, `API_UPSTREAM=http://${{api.RAILWAY_PRIVATE_DOMAIN}}:4000` | public domain (nginx proxies `/api` to the API over the private network) |
+
+Pushing to `main` redeploys both. If a push does not show up, run **Deploy latest commit** from
+the service's command palette (Ctrl+K). Migrations and the base seed run on every API start;
+the seed never overwrites existing users, so `SEED_ADMIN_PASSWORD` only matters for the very
+first start. Neon keeps point-in-time history; the volume holds uploads (Railway volume backups
+are under the service's Backups tab).
+
 ## Configuration
 
 Everything that can change lives in the **database Settings** (admin UI): company details
