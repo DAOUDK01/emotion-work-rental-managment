@@ -6,7 +6,8 @@ node_modules
 .git
 data
 docs
-e2e
+e2e/*
+!e2e/package.json
 backups
 playwright-report
 test-results
