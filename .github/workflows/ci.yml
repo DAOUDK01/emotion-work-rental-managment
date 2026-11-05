@@ -1,0 +1,49 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  checks:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_DB: emotionfix
+          POSTGRES_USER: emotionfix
+          POSTGRES_PASSWORD: emotionfix
+        ports: ['5432:5432']
+        options: >-
+          --health-cmd "pg_isready -U emotionfix" --health-interval 5s
+          --health-timeout 3s --health-retries 20
+    env:
+      DATABASE_URL: postgresql://emotionfix:emotionfix@localhost:5432/emotionfix
+      DIRECT_URL: postgresql://emotionfix:emotionfix@localhost:5432/emotionfix
+      JWT_SECRET: ci-secret-ci-secret-ci-secret
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 9.15.9
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: pnpm
+      - name: Install
+        run: pnpm install --frozen-lockfile
+      - name: Create test database
+        run: |
+          PGPASSWORD=emotionfix psql -h localhost -U emotionfix -d emotionfix -c 'CREATE DATABASE emotionfix_test'
+      - name: Prisma generate + migrate
+        run: pnpm --filter @emotionfix/api db:generate && pnpm --filter @emotionfix/api exec prisma migrate deploy
+      - name: Lint
+        run: pnpm lint
+      - name: Typecheck
+        run: pnpm typecheck
+      - name: Unit & integration tests
+        run: pnpm test
+      - name: Build
+        run: pnpm build

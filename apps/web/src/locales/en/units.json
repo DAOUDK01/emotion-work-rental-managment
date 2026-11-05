@@ -1,0 +1,133 @@
+{
+  "title": "Units",
+  "description": "Scooters, e-bikes and mopeds — purchase cost, earnings and payback per unit",
+  "view": {
+    "list": "List",
+    "compare": "Compare types"
+  },
+  "kpi": {
+    "fleet": "Fleet size",
+    "invested": "Total invested",
+    "allUnits": "purchase cost of active units",
+    "earned": "Total earned",
+    "netOfVat": "net of VAT",
+    "payback": "Fleet payback",
+    "earnedVsCost": "earned vs. purchase cost"
+  },
+  "status": {
+    "AVAILABLE": "Available",
+    "ON_RENT": "On rent",
+    "WAITING_PARTS": "Waiting for parts",
+    "IN_REPAIR": "In repair",
+    "SOLD": "Sold",
+    "DISPOSED": "Disposed"
+  },
+  "category": {
+    "E_SCOOTER": "E-scooter",
+    "E_BIKE": "E-bike",
+    "MOPED": "Moped"
+  },
+  "filters": {
+    "searchPlaceholder": "Search code, brand, model, seller…",
+    "status": "Status",
+    "allStatuses": "All statuses",
+    "allCategories": "All categories",
+    "includeInactive": "Include archived",
+    "needsReviewOnly": "Needs review only"
+  },
+  "table": {
+    "code": "Unit ID",
+    "brand": "Brand / model",
+    "category": "Category",
+    "owner": "Owner",
+    "cost": "Purchase cost",
+    "earned": "Earned",
+    "payback": "Payback",
+    "paidBack": "Paid back",
+    "saleResult": "Sale result"
+  },
+  "actions": {
+    "addUnit": "Add unit",
+    "sell": "Sell",
+    "statusChanged": "Status updated"
+  },
+  "empty": {
+    "title": "No units yet",
+    "hint": "Register your first scooter, e-bike or moped to start tracking its payback.",
+    "filtered": "No units match these filters"
+  },
+  "detail": {
+    "title": "Unit details",
+    "archived": "Archived",
+    "fields": "Details",
+    "legacyName": "Old name",
+    "soldFor": "Sold for",
+    "soldDate": "Sale date",
+    "result": "Lifetime result",
+    "partsUsed": "Repair parts used",
+    "remaining": "remaining",
+    "lifetime": "Lifetime result (earned + sale − cost − parts)",
+    "lastEntries": "Latest entries",
+    "noEntries": "No income entries for this unit yet."
+  },
+  "photos": {
+    "title": "Photos and documents",
+    "add": "Add photo",
+    "uploading": "Uploading…",
+    "uploaded": "File uploaded",
+    "empty": "No photos yet."
+  },
+  "form": {
+    "createTitle": "Add unit",
+    "editTitle": "Edit unit",
+    "brand": "Brand",
+    "brandPlaceholder": "e.g. Ego Evo 2",
+    "brandRequired": "Brand is required",
+    "modelName": "Model name",
+    "inclusions": "Included accessories",
+    "inclusionsHint": "e.g. charger, lock, helmet",
+    "purchaseDate": "Purchase date",
+    "codePreview": "Generates the unit ID: {{code}}",
+    "seller": "Seller",
+    "purchasePrice": "Purchase price (€)",
+    "owner": "Owner",
+    "ownerHint": "The partner who owns the unit",
+    "paidByHint": "Paid by a partner = recorded as that partner's investment",
+    "badAmount": "Enter a valid amount, e.g. 450 or 450,50",
+    "advancedToggle": "Advanced: set the unit ID manually",
+    "codeOverride": "Manual unit ID",
+    "codeOverrideHint": "Overrides the generated ID. Letters, numbers, . _ - (must be unique).",
+    "badCode": "2–40 characters: letters, numbers, . _ -"
+  },
+  "sell": {
+    "title": "Sell unit {{code}}",
+    "price": "Sale price (€)",
+    "priceRequired": "Sale price is required",
+    "dateRequired": "Sale date is required",
+    "buyer": "Buyer",
+    "buyerPlaceholder": "Search customers or type a name",
+    "buyerHint": "Pick an existing customer or type the buyer's name",
+    "linkedCustomer": "Linked to the customer register",
+    "receiverRequired": "Choose who received the money",
+    "confirm": "Record sale",
+    "soldOk": "Unit {{code}} sold",
+    "profit": "profit",
+    "loss": "loss",
+    "noUnit": "No unit selected"
+  },
+  "void": {
+    "title": "Void unit {{code}}?",
+    "message": "The unit is hidden from the active fleet. Its financial history stays intact and the action is logged.",
+    "reason": "Reason",
+    "reasonPlaceholder": "e.g. duplicate record, stolen, written off",
+    "reasonRequired": "Enter a reason"
+  },
+  "compare": {
+    "chartTitle": "Earned by unit type",
+    "chartHint": "Net earnings of active units — longest bar earns the most",
+    "tableTitle": "Unit types compared",
+    "units": "Units",
+    "emptyTitle": "Nothing to compare yet",
+    "emptyHint": "Add units with purchase prices to compare scooters, e-bikes and mopeds."
+  }
+}

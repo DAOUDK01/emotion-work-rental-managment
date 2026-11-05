@@ -1,0 +1,90 @@
+{
+  "title": "VAT",
+  "subtitle": "VAT position of the period — exactly what the accountant files",
+  "loading": "Calculating the VAT position…",
+  "export": {
+    "ready": "Export downloaded",
+    "failed": "The export could not be created",
+    "preparing": "Preparing…"
+  },
+  "cards": {
+    "collected": "VAT collected",
+    "collectedSub": "sales + rent",
+    "reclaimable": "VAT reclaimable",
+    "reclaimableSub": "from purchases",
+    "payable": "VAT payable",
+    "payableSub": "collected − reclaimable",
+    "refund": "VAT refund due",
+    "refundSub": "collected − reclaimable (negative = refund)",
+    "nonVat": "Non-VAT income",
+    "nonVatSub": "cash, Revolut, PayPal…"
+  },
+  "note": {
+    "title": "Accountant note"
+  },
+  "undated": {
+    "text_one": "{{count}} expense has no date, so it is excluded from every period (gross {{gross}}, reclaimable VAT {{vat}}). Add its date in Expenses so it counts.",
+    "text_other": "{{count}} expenses have no date, so they are excluded from every period (gross {{gross}}, reclaimable VAT {{vat}}). Add their dates in Expenses so they count."
+  },
+  "empty": {
+    "title": "No VAT activity in this period",
+    "hint": "No income or purchases are dated between {{from}} and {{to}}. Pick another period."
+  },
+  "byModel": {
+    "title": "By model",
+    "description": "Income of the period split by VAT treatment",
+    "empty": "No income in this period",
+    "emptyHint": "Only purchases are dated in this period.",
+    "model": "Model",
+    "withVat": "With VAT (gross)",
+    "vat": "VAT",
+    "noVat": "No VAT"
+  },
+  "lines": {
+    "show": "Show",
+    "hide": "Hide",
+    "showing": "Showing {{shown}} of {{total}} lines",
+    "showAll": "Show all {{total}} lines",
+    "reviewTooltip": "Flagged for review — check this line before filing"
+  },
+  "income": {
+    "title": "Income lines",
+    "summary_one": "{{count}} line · VAT {{vat}} · non-VAT {{nonVat}}",
+    "summary_other": "{{count}} lines · VAT {{vat}} · non-VAT {{nonVat}}",
+    "empty": "No income lines in this period",
+    "emptyHint": "Income entries dated inside the period appear here.",
+    "date": "Date",
+    "model": "Model",
+    "description": "Description",
+    "gross": "Gross",
+    "vat": "VAT",
+    "flag": "VAT invoice",
+    "vatFlag": "VAT",
+    "noVatFlag": "No VAT",
+    "nonVatTotal": "non-VAT {{amount}}"
+  },
+  "purchases": {
+    "title": "Purchase lines",
+    "summary_one": "{{count}} line · gross {{gross}} · reclaimable VAT {{reclaimable}}",
+    "summary_other": "{{count}} lines · gross {{gross}} · reclaimable VAT {{reclaimable}}",
+    "empty": "No purchase lines in this period",
+    "emptyHint": "Dated expenses inside the period appear here.",
+    "date": "Date",
+    "vendor": "Vendor",
+    "description": "Description",
+    "gross": "Gross",
+    "receipt": "Receipt",
+    "receiptYes": "Valid receipt",
+    "receiptNo": "No valid receipt",
+    "businessPct": "Business %",
+    "reclaimable": "Reclaimable",
+    "paidBy": "paid by {{name}}"
+  },
+  "tax": {
+    "single": "Business tax estimate: {{now}}",
+    "withNext": "Business tax estimate: {{now}} now, {{next}} from {{date}}",
+    "onlyNext": "Business tax estimate: {{next}} from {{date}}",
+    "hint": "corporate income tax on profit, separate from VAT",
+    "unavailable": "Business tax rates could not be loaded."
+  }
+}

@@ -1,0 +1,95 @@
+{
+  "title": "Osakkaat",
+  "subtitle": "Kuka sijoitti mitäkin, kenellä käteinen on, palkat ja voiton jako 50/50",
+  "scopeNote": "Sijoitukset, hallussa oleva käteinen ja velat osakkaille ovat kaikkien aikojen saldoja. Kerätty raha, palkat ja voitto seuraavat valittua jaksoa.",
+  "refreshed": "Luvut päivitetty",
+  "scope": {
+    "allTime": "Kaikki ajat",
+    "period": "Valittu jakso"
+  },
+  "empty": {
+    "title": "Osakkaita ei ole vielä määritetty",
+    "hint": "Lisää osakkaat rahan haltijoiksi Asetuksissa, niin sijoitukset, hallussa oleva käteinen ja voiton jako näkyvät täällä.",
+    "openSettings": "Avaa Asetukset"
+  },
+  "invested": {
+    "title": "Sijoitettu yhteensä",
+    "joint": "Yhteinen (uudelleensijoitettu)",
+    "note": "Yhteinen = vuokratuloa, joka on käytetty varaosiin. Voitto jaetaan 50/50.",
+    "total": "Pääoma yhteensä: {{amount}}",
+    "empty": "Sijoituksia ei ole vielä kirjattu",
+    "emptyHint": "Osakkaan itse maksamat laitteet ja hankinnat sekä käteissijoitukset näkyvät täällä automaattisesti."
+  },
+  "whoPaid": {
+    "title": "Kuka maksoi mitäkin",
+    "description": "Osakkaiden omat sijoitukset luokittain",
+    "category": "Luokka"
+  },
+  "categories": {
+    "UNITS": "Laitteet",
+    "SPARE_PARTS": "Varaosat",
+    "TOOLS": "Työkalut",
+    "EXPENSES": "Kulut",
+    "CASH_INJECTED": "Sijoitettu käteinen"
+  },
+  "collected": {
+    "title": "Rahan keränneet",
+    "description": "Kunkin haltijan vastaanottama raha valitulla jaksolla",
+    "empty": "Tällä jaksolla ei ole kerätty rahaa",
+    "chipLabel": "{{name}} keräsi {{amount}}"
+  },
+  "holding": {
+    "title": "Hallussa nyt",
+    "description": "Vastaanotettu raha, jota ei ole vielä tilitetty yrityksen tilille",
+    "holder": "Haltija",
+    "holding": "Hallussa",
+    "oldest": "Vanhin tilittämätön",
+    "companyAccount": "Yrityksen tili",
+    "overdue": "Myöhässä",
+    "overdueHint": "Hallussa yli {{days}} päivää — tilitä pian",
+    "settle": "Tilitä",
+    "view": "Näytä",
+    "settleAria": "Tilitä haltijan {{name}} käteinen",
+    "viewAria": "Näytä haltijan {{name}} käteinen",
+    "datesLoading": "Ladataan tilityspäiviä…",
+    "datesError": "Tilityspäiviä ei voitu ladata.",
+    "empty": "Ei rahan haltijoita"
+  },
+  "salaries": {
+    "title": "Palkat",
+    "description": "Kuukausipalkka jakson lopussa ja jakson kokonaissumma",
+    "partner": "Osakas",
+    "monthly": "Kuukaudessa",
+    "periodTotal": "Jakso yhteensä",
+    "empty": "Palkkoja ei ole asetettu",
+    "emptyHint": "Osakkaiden palkat vähennetään voitosta ennen 50/50-jakoa.",
+    "hint": "Palkat asetetaan Asetuksissa.",
+    "openSettings": "Aseta Asetuksissa"
+  },
+  "profit": {
+    "title": "Voitto",
+    "description": "Jakson nettovoitto, josta vähennetään palkat ja loppu jaetaan 50/50",
+    "netProfit": "Nettovoitto",
+    "beforeSalaries": "ennen palkkoja",
+    "salaries": "Palkat",
+    "afterSalaries": "Palkkojen jälkeen",
+    "howCalculated": "Näin nettovoitto lasketaan",
+    "revenueNet": "Liikevaihto (veroton, alennusten jälkeen)",
+    "expenses": "Liiketoiminnan kulut",
+    "cogs": "Myytyjen tuotteiden hankintameno",
+    "unitPurchases": "Laitehankinnat",
+    "unitPurchasesExcluded": "ei lasketa kuluksi",
+    "split": "Jako 50/50",
+    "noPartners": "Ei aktiivisia osakkaita, joiden kesken voitto jaettaisiin.",
+    "shareOf": "Osakkaan {{name}} osuus",
+    "taxEstimate": "Veroarvio ({{rate}})",
+    "noTaxOnLoss": "Tappiosta ei makseta veroa",
+    "afterTax": "Verojen jälkeen",
+    "taxNote": "Vain arvio — kirjanpitäjä vahvistaa lopullisen veron."
+  },
+  "payables": {
+    "title": "Yritys on velkaa osakkaille",
+    "note": "Vain tiedoksi — takaisinmaksuja osakkaille ei seurata tässä.",
+    "line": "Yritys on velkaa osakkaalle {{name}} {{amount}} itse maksetuista hankinnoista"
+  }
+}

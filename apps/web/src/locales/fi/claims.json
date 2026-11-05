@@ -1,0 +1,128 @@
+{
+  "title": "Takuuasiat",
+  "description": "Takuu- ja vakuutusyhtiöille tehdyt korvausvaatimukset avaamisesta maksuun asti.",
+  "new": "Uusi takuuasia",
+  "searchPlaceholder": "Hae asianumerolla, yhtiöllä tai kuvauksella",
+  "filters": {
+    "status": "Suodata tilan mukaan",
+    "allStatuses": "Kaikki tilat"
+  },
+  "status": {
+    "OPEN": "Avoin",
+    "SUBMITTED": "Lähetetty",
+    "APPROVED": "Hyväksytty",
+    "REJECTED": "Hylätty",
+    "PAID": "Maksettu"
+  },
+  "customerType": {
+    "INDIVIDUAL": "Yksityinen",
+    "BUSINESS": "Yritys"
+  },
+  "timeline": {
+    "label": "Asian eteneminen: {{status}} (vaihe {{step}}/{{steps}})",
+    "decision": "Päätös"
+  },
+  "table": {
+    "caseNumber": "Asianro",
+    "company": "Yhtiö",
+    "customer": "Asiakas",
+    "item": "Laite / tuote",
+    "claimed": "Vaadittu",
+    "approved": "Hyväksytty",
+    "status": "Tila",
+    "dates": "Päivämäärät",
+    "opened": "Avattu",
+    "submitted": "Lähetetty",
+    "decided": "Päätetty",
+    "documents_one": "{{count}} asiakirja",
+    "documents_other": "{{count}} asiakirjaa"
+  },
+  "empty": {
+    "title": "Ei vielä takuuasioita",
+    "hint": "Avaa asia, kun laite tai osa hajoaa takuuaikana tai kun vakuutusasia alkaa.",
+    "filteredTitle": "Hakuehtoja vastaavia asioita ei löytynyt",
+    "filteredHint": "Kokeile toista hakusanaa tai tilaa."
+  },
+  "actions": {
+    "view": "Näytä asia {{caseNumber}}",
+    "edit": "Muokkaa asiaa {{caseNumber}}",
+    "changeStatus": "Muuta tilaa",
+    "changeStatusFor": "Muuta asian {{caseNumber}} tilaa"
+  },
+  "pagination": {
+    "label": "Takuuasioiden sivut",
+    "showing": "{{from}}–{{to}} / {{total}}",
+    "prev": "Edellinen",
+    "next": "Seuraava",
+    "count_one": "{{count}} asia",
+    "count_other": "{{count}} asiaa"
+  },
+  "form": {
+    "createTitle": "Uusi takuuasia",
+    "editTitle": "Muokkaa asiaa {{caseNumber}}",
+    "company": "Takuu- / vakuutusyhtiö",
+    "companyPlaceholder": "esim. If Vahinkovakuutus, Segway Europe",
+    "customer": "Asiakas",
+    "customerSearch": "Hae nimellä, sähköpostilla tai Y-tunnuksella",
+    "clearCustomer": "Poista asiakas",
+    "searching": "Haetaan…",
+    "customerSearchFailed": "Asiakashaku epäonnistui — yritä uudelleen",
+    "noCustomers": "Asiakkaita ei löytynyt",
+    "unit": "Laite",
+    "noUnit": "Ei laitetta",
+    "product": "Tuote / osa",
+    "noProduct": "Ei tuotetta",
+    "loadingOptions": "Ladataan…",
+    "optionsFailed": "Listaa ei voitu ladata — avaa lomake uudelleen.",
+    "description": "Kuvaus",
+    "descriptionPlaceholder": "Mikä hajosi, milloin ja mitä vaaditaan",
+    "claimed": "Vaadittu summa (€)",
+    "submittedAt": "Lähetetty yhtiölle",
+    "submittedHint": "Jätä tyhjäksi, kunnes vaatimus on lähetetty.",
+    "saving": "Tallennetaan…",
+    "created": "Asia {{caseNumber}} luotu — voit nyt liittää asiakirjat"
+  },
+  "validation": {
+    "companyRequired": "Anna takuu- tai vakuutusyhtiö",
+    "descriptionRequired": "Kuvaile vaatimus",
+    "tooLong": "Teksti on liian pitkä",
+    "amountInvalid": "Anna kelvollinen summa, esim. 120,50",
+    "dateInvalid": "Anna kelvollinen päivämäärä",
+    "approvedRequired": "Anna hyväksytty summa",
+    "submittedRequired": "Anna päivä, jolloin vaatimus lähetettiin"
+  },
+  "statusDialog": {
+    "title": "Muuta tilaa — {{caseNumber}}",
+    "current": "Nykyinen tila",
+    "newStatus": "Uusi tila",
+    "approved": "Hyväksytty summa (€)",
+    "approvedHint": "Summa, jonka yhtiö on luvannut maksaa",
+    "decidedAt": "Päätöspäivä",
+    "decidedHint": "Jätä tyhjäksi, niin käytetään tätä päivää",
+    "submittedAt": "Lähetyspäivä",
+    "submit": "Päivitä tila",
+    "saving": "Päivitetään…",
+    "success": "Asian {{caseNumber}} tila on nyt {{status}}",
+    "rejectedNote": "Hylätty asia suljetaan ilman korvausta. Voit avata sen myöhemmin uudelleen valitsemalla toisen tilan."
+  },
+  "detail": {
+    "title": "Takuuasian tiedot",
+    "progress": "Eteneminen",
+    "fields": "Tiedot",
+    "opened": "Avattu",
+    "money": "Summat",
+    "difference": "Hyväksytty vs. vaadittu",
+    "documents": "Asiakirjat",
+    "upload": "Lataa asiakirja",
+    "uploading": "Ladataan…",
+    "uploaded": "Asiakirja ladattu",
+    "fileTypes": "Kuvat (JPEG, PNG, WebP, HEIC) tai PDF, enintään 10 Mt.",
+    "fileTooLarge": "Tiedosto on yli 10 Mt",
+    "noDocuments": "Ei vielä asiakirjoja. Liitä vaatimuslomake, valokuvat ja yhtiön päätös.",
+    "open": "Avaa {{name}}",
+    "deleteDoc": "Poista asiakirja {{name}}",
+    "deleteTitle": "Poistetaanko asiakirja?",
+    "deleteMessage": "{{name}} poistetaan tästä asiasta pysyvästi. Toimintoa ei voi perua.",
+    "deleted": "Asiakirja poistettu"
+  }
+}

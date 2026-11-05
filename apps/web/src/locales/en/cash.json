@@ -1,0 +1,115 @@
+{
+  "title": "Cash & settlements",
+  "subtitle": "Every euro received stays with its holder until it is handed over to the Company Account.",
+  "actions": {
+    "recordHandover": "Record handover"
+  },
+  "alertNote_one": "Balances older than {{count}} day alert on the dashboard (Settings → Cash).",
+  "alertNote_other": "Balances older than {{count}} days alert on the dashboard (Settings → Cash).",
+  "summary": {
+    "heldOutside": "Held outside the company account",
+    "heldOutsideSub": "Partners and cash box, not yet handed over",
+    "overdue": "Overdue holders",
+    "overdueSub_one": "Unsettled for more than {{count}} day",
+    "overdueSub_other": "Unsettled for more than {{count}} days",
+    "companySub": "Received directly + handovers in"
+  },
+  "kind": {
+    "PARTNER": "Partner",
+    "COMPANY": "Company",
+    "CASHBOX": "Cash box",
+    "OTHER": "Other"
+  },
+  "balances": {
+    "title": "Balances",
+    "emptyTitle": "No money holders yet",
+    "emptyHint": "Money holders (partners, cash box, Company Account) are managed in Settings.",
+    "received": "Received",
+    "receivedInclHandovers": "Received (incl. handovers in)",
+    "handedOver": "Handed over",
+    "holding": "Holding",
+    "inAccount": "In the account",
+    "overdue_one": "Unsettled since {{date}} — older than {{count}} day. Hand it over to the Company Account.",
+    "overdue_other": "Unsettled since {{date}} — older than {{count}} days. Hand it over to the Company Account.",
+    "unsettledSince": "Oldest unsettled receipt: {{date}}",
+    "negative": "More handed over than received — check for receipts that were not recorded.",
+    "settled": "Fully settled",
+    "companyHint": "Settlements from partners and the cash box land here.",
+    "handOver": "Hand over"
+  },
+  "handover": {
+    "title": "Hand over money",
+    "intro": "Record money that a holder has passed on, normally to the Company Account. It reduces the holder's balance.",
+    "from": "From",
+    "to": "To",
+    "choose": "Choose…",
+    "holdingHint": "Currently holding {{amount}}",
+    "note": "Note",
+    "notePlaceholder": "e.g. bank deposit, cash counted at the shop",
+    "submit": "Record handover",
+    "saving": "Saving…",
+    "recordAnyway": "Record anyway",
+    "success": "{{amount}} handed over from {{from}} to {{to}}"
+  },
+  "overdrawn": {
+    "title": "More than the current holding",
+    "message": "{{name}} is only holding {{holding}} according to the recorded receipts. Handing over {{amount}} would leave a balance of {{result}}.",
+    "advice": "Check the amount first. Record anyway only if the money really changed hands — for example when some receipts have not been entered yet."
+  },
+  "validation": {
+    "fromRequired": "Choose who is handing the money over",
+    "toRequired": "Choose who receives the money",
+    "dateRequired": "Enter the date",
+    "amountPositive": "Enter an amount greater than zero",
+    "noteTooLong": "The note can be at most 500 characters",
+    "sameHolder": "The receiver must be different from the giver"
+  },
+  "ledger": {
+    "title": "Ledger",
+    "description": "Receipts and handovers of all holders, newest first.",
+    "descriptionHolder": "Receipts and handovers of {{name}}, newest first.",
+    "holder": "Holder",
+    "allHolders": "All holders",
+    "clearFilters": "Clear filters",
+    "emptyTitle": "No movements",
+    "emptyHint": "Payments received and handovers will appear here.",
+    "emptyFilteredHint": "Nothing matches these filters. Try another holder or date range.",
+    "kindColumn": "Type",
+    "amount": "Amount",
+    "counterparty": "Counterparty",
+    "descriptionColumn": "Description",
+    "count_one": "{{count}} movement",
+    "count_other": "{{count}} movements",
+    "kind": {
+      "RECEIPT": "Receipt in",
+      "HANDOVER_OUT": "Handover out",
+      "HANDOVER_IN": "Handover in"
+    }
+  },
+  "history": {
+    "title": "Handovers",
+    "description": "Every recorded handover. Voiding one returns the amount to the giver's holding.",
+    "emptyTitle": "No handovers yet",
+    "emptyFilteredTitle": "No handovers with this status",
+    "emptyHint": "When a partner or the cash box passes money to the Company Account, record it as a handover.",
+    "recordFirst": "Record the first handover",
+    "from": "From",
+    "to": "To",
+    "amount": "Amount",
+    "note": "Note",
+    "voidAria": "Void handover of {{amount}} from {{from}} on {{date}}"
+  },
+  "void": {
+    "title": "Void this handover?",
+    "message": "{{amount}} handed over by {{from}} to {{to}} on {{date}} will be voided. The amount returns to {{from}}'s holding. The record stays in the audit log.",
+    "reason": "Reason",
+    "reasonPlaceholder": "e.g. entered twice, wrong amount",
+    "reasonRequired": "A reason is required",
+    "voiding": "Voiding…"
+  },
+  "pager": {
+    "label": "Pagination",
+    "previous": "Previous page",
+    "next": "Next page"
+  }
+}

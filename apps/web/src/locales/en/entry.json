@@ -1,0 +1,180 @@
+{
+  "title": "Add entry",
+  "subtitle": "Record income, expenses and partner investments — VAT is calculated as you type.",
+  "tabs": {
+    "income": "Income",
+    "expense": "Expense",
+    "investment": "Investment"
+  },
+  "empty": {
+    "noModelsTitle": "No business types set up",
+    "noModelsHint": "Add at least one business type (e.g. Rental, Repair) in Settings before recording income.",
+    "noCategoriesTitle": "No expense categories set up",
+    "noCategoriesHint": "Add expense categories in Settings before recording expenses."
+  },
+  "fields": {
+    "unit": "Unit",
+    "paymentStatus": "Payment status",
+    "notSet": "— Not set —",
+    "category": "Category",
+    "description": "Description",
+    "vendor": "Vendor",
+    "businessUse": "Business use %"
+  },
+  "actions": {
+    "clear": "Clear form",
+    "saving": "Saving…"
+  },
+  "validation": {
+    "dateRequired": "Pick a valid date",
+    "typeRequired": "Choose the type of income",
+    "categoryRequired": "Choose a category",
+    "descriptionRequired": "Describe what was bought",
+    "rateRequired": "Choose a VAT rate",
+    "amountInvalid": "Enter an amount greater than zero, e.g. 45 or 45,50",
+    "discountTooHigh": "The discount cannot be larger than the amount",
+    "receivedByRequired": "Choose who received the money when the status is Paid",
+    "pctInvalid": "Enter a whole number from 0 to 100",
+    "partnerRequired": "Choose the partner, or switch to Joint",
+    "reasonRequired": "A reason is required",
+    "tooLong": "This text is too long"
+  },
+  "pickers": {
+    "unitPlaceholder": "Search by unit ID, brand or model…",
+    "loadingUnits": "Loading units…",
+    "noUnits": "No unit matches your search",
+    "unitsFailed": "Could not load the unit list.",
+    "clearUnit": "Remove the selected unit",
+    "customerPlaceholder": "Type a name — or pick a saved customer",
+    "searching": "Searching saved customers…",
+    "noCustomers": "No saved customer found — the name is saved as typed",
+    "customersFailed": "Customer search failed — the name is saved as typed",
+    "unlink": "Unlink"
+  },
+  "customerType": {
+    "INDIVIDUAL": "Individual",
+    "BUSINESS": "Business"
+  },
+  "income": {
+    "type": "Type",
+    "selectType": "Choose type…",
+    "unitHint": "Optional — links the income to a scooter for payback tracking.",
+    "customer": "Customer",
+    "customerHint": "Optional. Free text, or pick a saved customer from the list.",
+    "customerLinkedHint": "Linked to a saved customer.",
+    "amountGross": "Amount € (incl. VAT)",
+    "amountNet": "Amount € (net, excl. VAT)",
+    "enterNet": "Enter net price (VAT is added on top)",
+    "netNeedsVatInvoice": "Without a VAT invoice the amount is non-VAT income, so it is used exactly as typed.",
+    "rateUnusedHint": "Not applied — no VAT invoice issued.",
+    "discountReasonPlaceholder": "e.g. Student discount, returning customer",
+    "vatDefaultHint": "Pre-filled from who received the money and the payment method — you can change it.",
+    "receivedByHint": "Required once the status is Paid.",
+    "notesPlaceholder": "What was sold or done — shown as the entry description",
+    "submit": "Save income",
+    "success": {
+      "title": "Saved: {{amount}} — {{model}}",
+      "paybackRemainingPct": "Unit {{code}} is {{amount}} from payback ({{pct}} recovered).",
+      "paybackRemaining": "Unit {{code}} is {{amount}} from payback.",
+      "paidBack": "Unit {{code}} has paid itself back — {{earned}} earned so far.",
+      "paybackNoCost": "Unit {{code}} has earned {{earned}} so far (no purchase price recorded).",
+      "needsReview": "This entry was flagged for review."
+    }
+  },
+  "expense": {
+    "selectCategory": "Choose category…",
+    "descriptionPlaceholder": "e.g. Brake pads, shop rent March",
+    "vendorPlaceholder": "e.g. Motonet, K-Rauta",
+    "amount": "Amount € (incl. VAT)",
+    "validReceipt": "Valid VAT receipt?",
+    "noReceiptHint": "Without a valid VAT receipt no VAT can be reclaimed.",
+    "businessUseHint": "Share used for the business (100 = fully business).",
+    "paidByHint": "Who paid. A partner's own money is recorded as their investment.",
+    "jointReinvested": "Joint reinvested (50/50)",
+    "jointHint": "Paid from shared profit — counted as a joint investment split 50/50.",
+    "unitHint": "Optional — e.g. parts or repairs for a specific scooter.",
+    "receipt": "Receipt photo",
+    "receiptHint": "JPEG, PNG, WebP, HEIC or PDF, max 10 MB. Uploaded after the expense is saved.",
+    "removeReceipt": "Remove the chosen receipt file",
+    "fileTooLarge": "The file is larger than 10 MB",
+    "receiptUploaded": "Receipt uploaded",
+    "receiptFailed": "The expense was saved, but the receipt upload failed. {{message}}",
+    "submit": "Save expense",
+    "success": {
+      "title": "Saved: {{amount}} — {{description}}",
+      "reclaim": "Reclaimable VAT: {{amount}}",
+      "receiptUploading": "Uploading receipt {{name}}…",
+      "receiptRetry": "Receipt not attached — choose the file again to retry.",
+      "voided": "This expense was voided as a duplicate."
+    }
+  },
+  "duplicates": {
+    "title": "Possible duplicate expense",
+    "message_one": "The new expense #{{id}} has the same vendor and amount as an existing expense within 3 days. Keep it if it is a separate purchase, or void it.",
+    "message_other": "The new expense #{{id}} has the same vendor and amount as {{count}} existing expenses within 3 days. Keep it if it is a separate purchase, or void it.",
+    "expense": "Expense",
+    "noDate": "No date",
+    "keep": "Keep — it is a separate purchase",
+    "voidNew": "Void the new expense",
+    "confirmTitle": "Void the new expense?",
+    "confirmMessage": "Expense #{{id}} will be marked as void. Its VAT and any partner investment it created will no longer count. This cannot be undone.",
+    "reason": "Reason",
+    "defaultReason": "Duplicate of expense {{ids}}"
+  },
+  "investment": {
+    "owner": "Invested by",
+    "partner": "Partner",
+    "joint": "Joint (50/50)",
+    "selectPartner": "Choose partner…",
+    "jointHint": "A joint investment is shared equally between the partners.",
+    "noPartners": "No partners are set up, so investments are recorded as joint.",
+    "note": "Note",
+    "notePlaceholder": "e.g. Cash added to the till for change",
+    "submit": "Save investment",
+    "success": "Saved: {{amount}} by {{who}} — {{category}}, {{date}}",
+    "infoTitle": "Investment categories",
+    "infoText": "Manual rows only. Unit purchases and expenses paid by a partner create their investment rows automatically."
+  },
+  "investmentCategory": {
+    "UNITS": "Units",
+    "SPARE_PARTS": "Spare parts",
+    "TOOLS": "Tools",
+    "EXPENSES": "Expenses",
+    "CASH_INJECTED": "Cash injected"
+  },
+  "investmentCategoryHint": {
+    "UNITS": "scooters, e-bikes or mopeds bought for the business",
+    "SPARE_PARTS": "parts bought with a partner's own money",
+    "TOOLS": "workshop tools and equipment",
+    "EXPENSES": "running costs a partner paid personally",
+    "CASH_INJECTED": "money put into the company account or till"
+  },
+  "preview": {
+    "title": "Live preview",
+    "hint": "Calculated as you type, exactly like the saved entry.",
+    "netModeHint": "Net price entered — VAT is added on top.",
+    "empty": "Enter an amount to see the VAT breakdown.",
+    "netEntered": "Net price entered",
+    "grossBeforeDiscount": "Before discount",
+    "discount": "Discount",
+    "noVatInvoice": "no VAT invoice",
+    "expenseTitle": "Reclaimable VAT",
+    "expenseHint": "VAT you can deduct from this purchase.",
+    "expenseGross": "Amount paid",
+    "vatInPrice": "VAT in price",
+    "reclaimable": "Reclaimable VAT",
+    "costAfterReclaim": "Cost after reclaim"
+  },
+  "latest": {
+    "title": "Latest entries",
+    "subtitle": "The 10 most recent income entries.",
+    "emptyTitle": "No entries yet",
+    "emptyHint": "Income you save above appears here.",
+    "noVatInvoice": "No VAT inv.",
+    "noVatInvoiceTitle": "No VAT invoice issued — non-VAT income"
+  },
+  "table": {
+    "type": "Type",
+    "gross": "Gross"
+  }
+}

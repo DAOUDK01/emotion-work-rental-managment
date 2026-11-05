@@ -1,0 +1,115 @@
+{
+  "title": "Käteinen ja tilitykset",
+  "subtitle": "Jokainen vastaanotettu euro pysyy vastaanottajansa hallussa, kunnes se tilitetään yrityksen tilille.",
+  "actions": {
+    "recordHandover": "Kirjaa tilitys"
+  },
+  "alertNote_one": "Yli {{count}} päivän vanhoista saldoista näytetään hälytys kojelaudalla (Asetukset → Käteinen).",
+  "alertNote_other": "Yli {{count}} päivää vanhoista saldoista näytetään hälytys kojelaudalla (Asetukset → Käteinen).",
+  "summary": {
+    "heldOutside": "Yrityksen tilin ulkopuolella",
+    "heldOutsideSub": "Osakkailla ja kassassa, tilittämättä",
+    "overdue": "Myöhässä olevat haltijat",
+    "overdueSub_one": "Tilittämättä yli {{count}} päivän",
+    "overdueSub_other": "Tilittämättä yli {{count}} päivää",
+    "companySub": "Suoraan vastaanotetut + saapuneet tilitykset"
+  },
+  "kind": {
+    "PARTNER": "Osakas",
+    "COMPANY": "Yritys",
+    "CASHBOX": "Kassa",
+    "OTHER": "Muu"
+  },
+  "balances": {
+    "title": "Saldot",
+    "emptyTitle": "Rahan haltijoita ei vielä ole",
+    "emptyHint": "Rahan haltijoita (osakkaat, kassa, yrityksen tili) hallitaan asetuksissa.",
+    "received": "Vastaanotettu",
+    "receivedInclHandovers": "Vastaanotettu (sis. saapuneet tilitykset)",
+    "handedOver": "Tilitetty",
+    "holding": "Hallussa",
+    "inAccount": "Tilillä",
+    "overdue_one": "Tilittämättä {{date}} alkaen — yli {{count}} päivän vanha. Tilitä se yrityksen tilille.",
+    "overdue_other": "Tilittämättä {{date}} alkaen — yli {{count}} päivää vanha. Tilitä se yrityksen tilille.",
+    "unsettledSince": "Vanhin tilittämätön maksu: {{date}}",
+    "negative": "Tilitetty enemmän kuin vastaanotettu — tarkista, puuttuuko kirjaamattomia maksuja.",
+    "settled": "Kokonaan tilitetty",
+    "companyHint": "Osakkaiden ja kassan tilitykset tulevat tänne.",
+    "handOver": "Tilitä"
+  },
+  "handover": {
+    "title": "Tilitä rahaa",
+    "intro": "Kirjaa raha, jonka haltija on luovuttanut eteenpäin, yleensä yrityksen tilille. Se pienentää haltijan saldoa.",
+    "from": "Keneltä",
+    "to": "Kenelle",
+    "choose": "Valitse…",
+    "holdingHint": "Hallussa nyt {{amount}}",
+    "note": "Huomautus",
+    "notePlaceholder": "esim. talletus pankkiin, käteinen laskettu liikkeessä",
+    "submit": "Kirjaa tilitys",
+    "saving": "Tallennetaan…",
+    "recordAnyway": "Kirjaa silti",
+    "success": "{{amount}} tilitetty: {{from}} → {{to}}"
+  },
+  "overdrawn": {
+    "title": "Enemmän kuin hallussa oleva summa",
+    "message": "Kirjattujen maksujen mukaan haltijalla {{name}} on hallussa vain {{holding}}. Tilitys {{amount}} jättäisi saldoksi {{result}}.",
+    "advice": "Tarkista summa ensin. Kirjaa silti vain, jos raha todella vaihtoi omistajaa — esimerkiksi kun osa maksuista on vielä kirjaamatta."
+  },
+  "validation": {
+    "fromRequired": "Valitse, kuka tilittää rahan",
+    "toRequired": "Valitse, kuka vastaanottaa rahan",
+    "dateRequired": "Anna päivämäärä",
+    "amountPositive": "Anna nollaa suurempi summa",
+    "noteTooLong": "Huomautus voi olla enintään 500 merkkiä",
+    "sameHolder": "Vastaanottajan on oltava eri kuin luovuttaja"
+  },
+  "ledger": {
+    "title": "Kirjanpito",
+    "description": "Kaikkien haltijoiden maksut ja tilitykset, uusimmat ensin.",
+    "descriptionHolder": "Haltijan {{name}} maksut ja tilitykset, uusimmat ensin.",
+    "holder": "Haltija",
+    "allHolders": "Kaikki haltijat",
+    "clearFilters": "Tyhjennä suodattimet",
+    "emptyTitle": "Ei tapahtumia",
+    "emptyHint": "Vastaanotetut maksut ja tilitykset näkyvät täällä.",
+    "emptyFilteredHint": "Mikään ei vastaa näitä suodattimia. Kokeile toista haltijaa tai aikaväliä.",
+    "kindColumn": "Tyyppi",
+    "amount": "Summa",
+    "counterparty": "Vastapuoli",
+    "descriptionColumn": "Kuvaus",
+    "count_one": "{{count}} tapahtuma",
+    "count_other": "{{count}} tapahtumaa",
+    "kind": {
+      "RECEIPT": "Maksu sisään",
+      "HANDOVER_OUT": "Tilitys ulos",
+      "HANDOVER_IN": "Tilitys sisään"
+    }
+  },
+  "history": {
+    "title": "Tilitykset",
+    "description": "Kaikki kirjatut tilitykset. Mitätöinti palauttaa summan luovuttajan saldoon.",
+    "emptyTitle": "Ei vielä tilityksiä",
+    "emptyFilteredTitle": "Ei tilityksiä tällä tilalla",
+    "emptyHint": "Kun osakas tai kassa luovuttaa rahaa yrityksen tilille, kirjaa se tilitykseksi.",
+    "recordFirst": "Kirjaa ensimmäinen tilitys",
+    "from": "Keneltä",
+    "to": "Kenelle",
+    "amount": "Summa",
+    "note": "Huomautus",
+    "voidAria": "Mitätöi tilitys {{amount}} ({{from}}, {{date}})"
+  },
+  "void": {
+    "title": "Mitätöidäänkö tilitys?",
+    "message": "Tilitys {{amount}} ({{from}} → {{to}}, {{date}}) mitätöidään. Summa palaa haltijan {{from}} saldoon. Tapahtuma säilyy muutoslokissa.",
+    "reason": "Syy",
+    "reasonPlaceholder": "esim. kirjattu kahdesti, väärä summa",
+    "reasonRequired": "Syy on pakollinen",
+    "voiding": "Mitätöidään…"
+  },
+  "pager": {
+    "label": "Sivutus",
+    "previous": "Edellinen sivu",
+    "next": "Seuraava sivu"
+  }
+}

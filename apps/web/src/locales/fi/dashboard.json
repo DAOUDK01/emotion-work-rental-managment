@@ -1,0 +1,73 @@
+{
+  "title": "Kojelauta",
+  "filters": {
+    "allModels": "Kaikki mallit",
+    "unit": "Laite",
+    "allUnits": "Kaikki laitteet",
+    "segment": "Asiakassegmentti",
+    "allSegments": "Kaikki segmentit",
+    "individual": "Yksityinen",
+    "business": "Yritys",
+    "receivedBy": "Vastaanottaja",
+    "anyReceiver": "Kuka tahansa"
+  },
+  "kpi": {
+    "totalSales": "Kokonaismyynti",
+    "inclVat": "sis. ALV",
+    "expenses": "Kulut",
+    "allCategories": "kaikki kategoriat",
+    "netProfit": "Nettotulos",
+    "margin": "kate",
+    "vatPayable": "Maksettava ALV",
+    "collectedMinusReclaimable": "kerätty miinus vähennettävä",
+    "discounts": "Annetut alennukset",
+    "promotions": "kampanjaa",
+    "unpaid": "Maksamatta",
+    "customers": "asiakasta",
+    "received": "Saatu",
+    "outstanding": "Avoinna",
+    "orders": "Tilaukset",
+    "avgPerOrder": "keskim. / tilaus",
+    "rentalPayback": "Vuokratuotto laitteista",
+    "taxEstimate": "Veroarvio",
+    "afterTax": "verojen jälkeen"
+  },
+  "charts": {
+    "revenueByModel": "Liikevaihto malleittain",
+    "longestBar": "Pisin palkki = mihin kannattaa panostaa",
+    "profitByModel": "Tulos malleittain",
+    "greenRed": "Vihreä = voitto, punainen = tappio",
+    "growth": "Kasvu ajan yli",
+    "compareModels": "Vertaa malleja",
+    "oneModel": "Yksi malli",
+    "monthlyTrend": "Kuukausittainen liikevaihto",
+    "receivedLabel": "Saatu",
+    "outstandingLabel": "Avoinna",
+    "expensesByType": "Kulut tyypeittäin",
+    "revenueByReceiver": "Liikevaihto vastaanottajittain",
+    "rentalByCategory": "Vuokratuotot laiteluokittain",
+    "weekly": "Viikoittain",
+    "monthly": "Kuukausittain",
+    "yearly": "Vuosittain",
+    "last": "Viimeiset",
+    "weeks": "viikkoa",
+    "months": "kuukautta",
+    "years": "vuotta"
+  },
+  "units": {
+    "title": "Laitteiden tuotto — vuokratulot vs. hankintahinta",
+    "unit": "Laite",
+    "category": "Luokka",
+    "status": "Tila",
+    "orders": "Vuokrauksia",
+    "revenue": "Vuokratulot",
+    "cost": "Hankintahinta",
+    "diff": "Tulot − hinta",
+    "payback": "Takaisinmaksu",
+    "paidBack": "Maksettu takaisin"
+  },
+  "bridge": { "title": "Tulossilta" },
+  "alerts": {
+    "cashHolding": "{{name}} pitää hallussaan {{amount}} (vanhin kuitti {{date}}) — tilitä yritystilille."
+  }
+}

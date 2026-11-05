@@ -1,0 +1,1081 @@
+// E Motion Works Oy — database schema (PostgreSQL 16)
+// Money is ALWAYS integer cents (fields named *Cents). VAT rates are basis points (2550 = 25.5 %).
+// Business dates are DATE columns (Europe/Helsinki calendar dates).
+// Financial records are never hard-deleted: they carry a RecordStatus and are voided/cancelled.
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+// ------------------------------------------------------------------
+// Auth & users
+// ------------------------------------------------------------------
+
+enum Role {
+  ADMIN      // Owner/Admin (Ahmed, Salman) — everything
+  STAFF      // Staff/Cashier — POS and entries, no settings or partner data
+  ACCOUNTANT // read-only + exports
+}
+
+enum Language {
+  EN
+  FI
+}
+
+model User {
+  id           Int       @id @default(autoincrement())
+  email        String    @unique
+  name         String
+  passwordHash String
+  role         Role      @default(STAFF)
+  language     Language  @default(EN)
+  active       Boolean   @default(true)
+  maxDiscountPct Int     @default(100) // POS: permission-controlled max discount for staff
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+
+  refreshTokens RefreshToken[]
+  auditLogs     AuditLog[]
+
+  @@map("users")
+}
+
+model RefreshToken {
+  id        Int       @id @default(autoincrement())
+  userId    Int
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  tokenHash String    @unique
+  expiresAt DateTime
+  revokedAt DateTime?
+  userAgent String?
+  createdAt DateTime  @default(now())
+
+  @@index([userId])
+  @@map("refresh_tokens")
+}
+
+// ------------------------------------------------------------------
+// Settings & effective-dated rates
+// ------------------------------------------------------------------
+
+model Setting {
+  key       String   @id
+  value     Json
+  updatedAt DateTime @updatedAt
+
+  @@map("settings")
+}
+
+model VatRate {
+  id        Int     @id @default(autoincrement())
+  rateBp    Int // 2550 = 25.5 %
+  validFrom DateTime @db.Date
+  label     String?
+  isDefault Boolean @default(true) // default rate series vs special rates (0 % exempt etc.)
+
+  @@unique([rateBp, validFrom])
+  @@map("vat_rates")
+}
+
+model TaxRate {
+  id        Int      @id @default(autoincrement())
+  rateBp    Int // corporate income tax: 2000 now, 1800 from 2027-01-01
+  validFrom DateTime @db.Date
+
+  @@map("tax_rates")
+}
+
+model Salary {
+  id         Int         @id @default(autoincrement())
+  holderId   Int // partner (MoneyHolder of kind PARTNER)
+  holder     MoneyHolder @relation(fields: [holderId], references: [id])
+  monthlyCents Int
+  validFrom  DateTime    @db.Date
+  note       String?
+
+  @@index([holderId])
+  @@map("salaries")
+}
+
+// ------------------------------------------------------------------
+// Business vocabulary (DB tables, not enums, so Settings can extend them)
+// ------------------------------------------------------------------
+
+model BusinessModel {
+  id        Int     @id @default(autoincrement())
+  code      String  @unique // RENTAL, REPAIR, SPARE_PARTS, UNIT_SALES, CONTRACT, ...
+  nameEn    String
+  nameFi    String
+  color     String? // chart colour override
+  sortOrder Int     @default(0)
+  active    Boolean @default(true)
+  isSystem  Boolean @default(false) // seeded models cannot be deleted, only deactivated
+
+  entries   Entry[]
+  sales     Sale[]
+  invoices  Invoice[]
+  discounts DiscountRecord[]
+
+  @@map("models")
+}
+
+enum HolderKind {
+  PARTNER
+  COMPANY
+  CASHBOX
+  OTHER
+}
+
+model MoneyHolder {
+  id        Int        @id @default(autoincrement())
+  name      String     @unique // Ahmed, Salman, Company Account, Cash
+  kind      HolderKind @default(OTHER)
+  active    Boolean    @default(true)
+  sortOrder Int        @default(0)
+  isSystem  Boolean    @default(false)
+
+  payments        Payment[]
+  entriesReceived Entry[]        @relation("EntryReceivedBy")
+  expensesPaid    Expense[]      @relation("ExpensePaidBy")
+  unitsOwned      Unit[]         @relation("UnitOwner")
+  unitsPaid       Unit[]         @relation("UnitPaidBy")
+  investments     Investment[]
+  handoversFrom   CashHandover[] @relation("HandoverFrom")
+  handoversTo     CashHandover[] @relation("HandoverTo")
+  salaries        Salary[]
+
+  @@map("money_holders")
+}
+
+model PaymentMethod {
+  id                Int     @id @default(autoincrement())
+  name              String  @unique // Bank transfer, Card, MobilePay, Revolut, Wise, PayPal, Cash
+  nameFi            String?
+  active            Boolean @default(true)
+  sortOrder         Int     @default(0)
+  defaultVatInvoice Boolean @default(false) // default for "VAT invoice issued?" when this method chosen
+  isSystem          Boolean @default(false)
+
+  entries  Entry[]
+  payments Payment[]
+
+  @@map("payment_methods")
+}
+
+model ExpenseCategory {
+  id        Int     @id @default(autoincrement())
+  nameEn    String  @unique
+  nameFi    String?
+  active    Boolean @default(true)
+  sortOrder Int     @default(0)
+  isSystem  Boolean @default(false)
+
+  expenses Expense[]
+
+  @@map("expense_categories")
+}
+
+model UnitPrefix {
+  id        Int     @id @default(autoincrement())
+  prefix    String  @unique // EE, EE2, EW, FF
+  brandName String
+  active    Boolean @default(true)
+
+  @@map("unit_prefixes")
+}
+
+// ------------------------------------------------------------------
+// Units (scooters, e-bikes, mopeds)
+// ------------------------------------------------------------------
+
+enum UnitCategory {
+  E_SCOOTER
+  E_BIKE
+  MOPED
+}
+
+enum UnitStatus {
+  AVAILABLE
+  ON_RENT
+  WAITING_PARTS
+  IN_REPAIR
+  SOLD
+  DISPOSED
+}
+
+model Unit {
+  id            Int          @id @default(autoincrement())
+  code          String       @unique // EE2-251001 (prefix + purchase date YYMMDD, suffix -2 on collision)
+  brand         String // Ego Evo 2, Engwe ...
+  modelName     String? // free text, e.g. "EP2 Pro"
+  category      UnitCategory
+  inclusions    String? // "03 batteries and charger"
+  purchaseDate  DateTime?    @db.Date
+  sellerName    String?
+  purchaseCents Int?
+  ownerId       Int?
+  owner         MoneyHolder? @relation("UnitOwner", fields: [ownerId], references: [id])
+  paidById      Int?
+  paidBy        MoneyHolder? @relation("UnitPaidBy", fields: [paidById], references: [id])
+  status        UnitStatus   @default(AVAILABLE)
+  notes         String?
+  legacyName    String? // unit name as written in the old Excel
+
+  soldCents        Int?
+  soldDate         DateTime? @db.Date
+  soldToCustomerId Int?
+  soldToCustomer   Customer? @relation(fields: [soldToCustomerId], references: [id])
+
+  needsReview  Boolean @default(false)
+  reviewReason String?
+  active       Boolean @default(true)
+  importBatchId Int?
+  importBatch  ImportBatch? @relation(fields: [importBatchId], references: [id])
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  entries        Entry[]
+  rentals        Rental[]
+  expenses       Expense[]
+  sales          Sale[]
+  invoices       Invoice[]
+  stockMovements StockMovement[] // parts used in repair of this unit
+  attachments    Attachment[] // photos
+  investments    Investment[]
+  warrantyClaims WarrantyClaim[]
+
+  @@index([status])
+  @@map("units")
+}
+
+// ------------------------------------------------------------------
+// Customers & suppliers
+// ------------------------------------------------------------------
+
+enum CustomerType {
+  INDIVIDUAL
+  BUSINESS
+}
+
+model Customer {
+  id         Int          @id @default(autoincrement())
+  type       CustomerType @default(INDIVIDUAL)
+  name       String
+  businessId String? // Y-tunnus for business customers
+  email      String?
+  phone      String? // personal data — API exposes to admins only (GDPR)
+  address    String?
+  postalCode String?
+  city       String?
+  country    String       @default("FI")
+  language   Language     @default(EN)
+  notes      String?
+  archived   Boolean      @default(false)
+  createdAt  DateTime     @default(now())
+  updatedAt  DateTime     @updatedAt
+
+  entries     Entry[]
+  rentals     Rental[]
+  invoices    Invoice[]
+  sales       Sale[]
+  unitsBought Unit[]
+  claims      WarrantyClaim[]
+  contracts   Contract[]
+  attachments Attachment[]
+
+  @@index([name])
+  @@map("customers")
+}
+
+model Supplier {
+  id      Int     @id @default(autoincrement())
+  name    String  @unique
+  contact String?
+  email   String?
+  notes   String?
+  active  Boolean @default(true)
+
+  products       Product[]
+  stockMovements StockMovement[]
+
+  @@map("suppliers")
+}
+
+// ------------------------------------------------------------------
+// Inventory
+// ------------------------------------------------------------------
+
+enum BarcodeType {
+  EAN13
+  CODE128
+  OTHER
+}
+
+model Product {
+  id              Int      @id @default(autoincrement())
+  sku             String   @unique
+  nameEn          String
+  nameFi          String?
+  category        String?
+  brand           String?
+  compatibleUnits String? // free text: which unit models this part fits
+  costCents       Int? // last purchase cost
+  priceCents      Int // selling price, VAT-INCLUSIVE (gross)
+  wholesaleCents  Int? // future: wholesale price list
+  vatRateBp       Int      @default(2550)
+  trackStock      Boolean  @default(true) // services (labour) = false
+  reorderLevel    Int      @default(0)
+  location        String? // shelf
+  supplierId      Int?
+  supplier        Supplier? @relation(fields: [supplierId], references: [id])
+  imageId         Int?
+  active          Boolean  @default(true)
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  barcodes       ProductBarcode[]
+  stockMovements StockMovement[]
+  saleLines      SaleLine[]
+  invoiceLines   InvoiceLine[]
+  creditLines    CreditNoteLine[]
+  expenses       Expense[] // purchases that received this product into stock
+  claims         WarrantyClaim[]
+  attachments    Attachment[]
+
+  @@index([nameEn])
+  @@map("products")
+}
+
+model ProductBarcode {
+  id        Int         @id @default(autoincrement())
+  productId Int
+  product   Product     @relation(fields: [productId], references: [id], onDelete: Cascade)
+  barcode   String      @unique
+  type      BarcodeType @default(OTHER)
+
+  @@index([productId])
+  @@map("product_barcodes")
+}
+
+enum StockMoveType {
+  PURCHASE // goods receiving
+  SALE
+  RETURN
+  ADJUSTMENT
+  REPAIR_USE // used in repair (optionally linked to a unit)
+  TRANSFER
+  IMPORT // opening balances / Excel import
+}
+
+model StockMovement {
+  id            Int           @id @default(autoincrement())
+  productId     Int
+  product       Product       @relation(fields: [productId], references: [id])
+  type          StockMoveType
+  qty           Int // signed: +receive, −sale
+  unitCostCents Int? // cost per unit for PURCHASE/IMPORT
+  shippingCents Int? // future landed cost components (import from China)
+  customsCents  Int?
+  importVatCents Int?
+  reason        String? // required for ADJUSTMENT (service layer enforces)
+  supplierId    Int?
+  supplier      Supplier?     @relation(fields: [supplierId], references: [id])
+  unitId        Int? // REPAIR_USE on this unit
+  unit          Unit?         @relation(fields: [unitId], references: [id])
+  saleLineId    Int?
+  saleLine      SaleLine?     @relation(fields: [saleLineId], references: [id])
+  expenseId     Int?
+  expense       Expense?      @relation(fields: [expenseId], references: [id])
+  creditNoteId  Int?
+  creditNote    CreditNote?   @relation(fields: [creditNoteId], references: [id])
+  createdById   Int?
+  createdAt     DateTime      @default(now())
+  notes         String?
+
+  @@index([productId, createdAt])
+  @@map("stock_movements")
+}
+
+// ------------------------------------------------------------------
+// Income ledger — every income is an Entry; money received is a Payment
+// ------------------------------------------------------------------
+
+enum PaymentStatus {
+  PAID
+  INVOICED
+  PENDING
+  NOT_YET_BILLED
+}
+
+enum EntrySource {
+  POS
+  WEB
+  WHATSAPP
+  IMPORT
+  SYSTEM
+}
+
+enum RecordStatus {
+  ACTIVE
+  VOID
+}
+
+model Entry {
+  id          Int           @id @default(autoincrement())
+  entryDate   DateTime      @db.Date
+  modelId     Int
+  model       BusinessModel @relation(fields: [modelId], references: [id])
+  unitId      Int?
+  unit        Unit?         @relation(fields: [unitId], references: [id])
+  customerId  Int?
+  customer    Customer?     @relation(fields: [customerId], references: [id])
+  customerName String? // free-text customer when no customer record exists
+  description String?
+
+  grossCents    Int // amount AFTER discount, VAT-inclusive when vatInvoice
+  discountCents Int     @default(0)
+  discountReason String?
+  vatInvoice    Boolean @default(false) // "VAT invoice issued?" — accountant must confirm non-invoiced income
+  vatRateBp     Int     @default(2550)
+  vatCents      Int     @default(0) // 0 when vatInvoice=false (non-VAT income)
+  netCents      Int // = gross − vat (equals gross for non-VAT income)
+
+  labourCents Int? // repair breakdown (from WhatsApp "labour 50 parts 30")
+  partsCents  Int?
+
+  paymentStatus   PaymentStatus  @default(PAID)
+  paymentMethodId Int?
+  paymentMethod   PaymentMethod? @relation(fields: [paymentMethodId], references: [id])
+  receivedById    Int?
+  receivedBy      MoneyHolder?   @relation("EntryReceivedBy", fields: [receivedById], references: [id])
+
+  segment CustomerType @default(INDIVIDUAL) // customer segment snapshot for filters
+
+  source        EntrySource  @default(WEB)
+  status        RecordStatus @default(ACTIVE)
+  voidReason    String?
+  needsReview   Boolean      @default(false)
+  reviewReason  String?
+
+  saleId    Int?     @unique
+  sale      Sale?    @relation(fields: [saleId], references: [id])
+  rentalId  Int?     @unique
+  rental    Rental?  @relation(fields: [rentalId], references: [id])
+  invoiceId Int?     @unique
+  invoice   Invoice? @relation(fields: [invoiceId], references: [id])
+
+  whatsappMessageId Int? @unique
+  importBatchId     Int?
+  importBatch       ImportBatch? @relation(fields: [importBatchId], references: [id])
+
+  createdById Int?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  payments  Payment[]
+  discounts DiscountRecord[]
+  whatsapp  WhatsAppMessage? @relation(fields: [whatsappMessageId], references: [id])
+
+  @@index([entryDate])
+  @@index([modelId, entryDate])
+  @@index([unitId])
+  @@index([paymentStatus])
+  @@map("entries")
+}
+
+model Payment {
+  id           Int            @id @default(autoincrement())
+  date         DateTime       @db.Date
+  amountCents  Int
+  methodId     Int?
+  method       PaymentMethod? @relation(fields: [methodId], references: [id])
+  receivedById Int
+  receivedBy   MoneyHolder    @relation(fields: [receivedById], references: [id])
+  entryId      Int?
+  entry        Entry?         @relation(fields: [entryId], references: [id])
+  invoiceId    Int?
+  invoice      Invoice?       @relation(fields: [invoiceId], references: [id])
+  saleId       Int?
+  sale         Sale?          @relation(fields: [saleId], references: [id])
+  changeCents  Int? // cash change given (POS)
+  reference    String?
+  note         String?
+  status       RecordStatus   @default(ACTIVE)
+  createdById  Int?
+  createdAt    DateTime       @default(now())
+
+  @@index([date])
+  @@index([receivedById, date])
+  @@map("payments")
+}
+
+// ------------------------------------------------------------------
+// POS sales
+// ------------------------------------------------------------------
+
+enum SaleStatus {
+  PARKED
+  COMPLETED
+  REFUNDED
+  VOID
+}
+
+model Sale {
+  id             Int           @id @default(autoincrement())
+  number         String        @unique // receipt number R-000123
+  businessDate   DateTime      @db.Date // Z-report day
+  modelId        Int
+  model          BusinessModel @relation(fields: [modelId], references: [id])
+  customerId     Int?
+  customer       Customer?     @relation(fields: [customerId], references: [id])
+  unitId         Int?
+  unit           Unit?         @relation(fields: [unitId], references: [id])
+  status         SaleStatus    @default(PARKED)
+  cartDiscountCents Int        @default(0)
+  cartDiscountReason String?
+  totalGrossCents Int          @default(0)
+  totalVatCents   Int          @default(0)
+  totalNetCents   Int          @default(0)
+  notes          String?
+  refundOfId     Int?
+  refundOf       Sale?         @relation("SaleRefund", fields: [refundOfId], references: [id])
+  refunds        Sale[]        @relation("SaleRefund")
+  completedAt    DateTime?
+  createdById    Int?
+  createdAt      DateTime      @default(now())
+  updatedAt      DateTime      @updatedAt
+
+  lines       SaleLine[]
+  payments    Payment[]
+  entry       Entry?
+  discounts   DiscountRecord[]
+  creditNotes CreditNote[]
+
+  @@index([businessDate])
+  @@map("sales")
+}
+
+model SaleLine {
+  id             Int      @id @default(autoincrement())
+  saleId         Int
+  sale           Sale     @relation(fields: [saleId], references: [id], onDelete: Cascade)
+  productId      Int?
+  product        Product? @relation(fields: [productId], references: [id])
+  description    String
+  qty            Decimal  @db.Decimal(10, 2)
+  unitPriceCents Int // gross per unit (before line discount)
+  discountCents  Int      @default(0) // per line, absolute
+  discountReason String?
+  vatRateBp      Int
+  lineGrossCents Int // after discount, VAT-inclusive
+  lineVatCents   Int
+  lineNetCents   Int
+  isLabour       Boolean  @default(false)
+
+  stockMovements StockMovement[]
+
+  @@index([saleId])
+  @@map("sale_lines")
+}
+
+// ------------------------------------------------------------------
+// Invoicing
+// ------------------------------------------------------------------
+
+enum InvoiceStatus {
+  DRAFT
+  SENT
+  PARTIALLY_PAID
+  PAID
+  CANCELLED // only via credit note
+}
+
+model Invoice {
+  id              Int           @id @default(autoincrement())
+  number          Int           @unique // sequential, no gaps (NumberSequence)
+  numberFormatted String        @unique // e.g. "2026-0001"
+  customerId      Int
+  customer        Customer      @relation(fields: [customerId], references: [id])
+  modelId         Int?
+  model           BusinessModel? @relation(fields: [modelId], references: [id])
+  unitId          Int?
+  unit            Unit?         @relation(fields: [unitId], references: [id])
+  rentalId        Int?
+  rental          Rental?       @relation(fields: [rentalId], references: [id])
+  language        Language      @default(EN)
+  issueDate       DateTime      @db.Date
+  deliveryDate    DateTime?     @db.Date
+  periodText      String? // rental period on the invoice
+  dueDate         DateTime      @db.Date
+  termsDays       Int           @default(14)
+  referenceNumber String // Finnish viitenumero with check digit
+  status          InvoiceStatus @default(DRAFT)
+  totalGrossCents Int           @default(0)
+  totalVatCents   Int           @default(0)
+  totalNetCents   Int           @default(0)
+  paidCents       Int           @default(0) // cached from payments
+  notes           String?
+  sentAt          DateTime?
+  emailedTo       String?
+  createdById     Int?
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+
+  lines       InvoiceLine[]
+  payments    Payment[]
+  entry       Entry?
+  creditNotes CreditNote[]
+  discounts   DiscountRecord[]
+  attachments Attachment[]
+
+  @@index([status, dueDate])
+  @@map("invoices")
+}
+
+model InvoiceLine {
+  id             Int      @id @default(autoincrement())
+  invoiceId      Int
+  invoice        Invoice  @relation(fields: [invoiceId], references: [id], onDelete: Cascade)
+  productId      Int?
+  product        Product? @relation(fields: [productId], references: [id])
+  description    String
+  qty            Decimal  @db.Decimal(10, 2)
+  unitPriceCents Int
+  discountCents  Int      @default(0)
+  discountReason String?
+  vatRateBp      Int
+  lineGrossCents Int
+  lineVatCents   Int
+  lineNetCents   Int
+  isLabour       Boolean  @default(false)
+  sortOrder      Int      @default(0)
+
+  @@index([invoiceId])
+  @@map("invoice_lines")
+}
+
+model CreditNote {
+  id              Int      @id @default(autoincrement())
+  number          Int      @unique
+  numberFormatted String   @unique // "CN-2026-0001"
+  invoiceId       Int?
+  invoice         Invoice? @relation(fields: [invoiceId], references: [id])
+  saleId          Int?
+  sale            Sale?    @relation(fields: [saleId], references: [id])
+  issueDate       DateTime @db.Date
+  reason          String
+  totalGrossCents Int
+  totalVatCents   Int
+  totalNetCents   Int
+  restocked       Boolean  @default(false)
+  createdById     Int?
+  createdAt       DateTime @default(now())
+
+  lines          CreditNoteLine[]
+  stockMovements StockMovement[]
+
+  @@map("credit_notes")
+}
+
+model CreditNoteLine {
+  id             Int        @id @default(autoincrement())
+  creditNoteId   Int
+  creditNote     CreditNote @relation(fields: [creditNoteId], references: [id], onDelete: Cascade)
+  productId      Int?
+  product        Product?   @relation(fields: [productId], references: [id])
+  description    String
+  qty            Decimal    @db.Decimal(10, 2)
+  unitPriceCents Int
+  vatRateBp      Int
+  lineGrossCents Int
+  lineVatCents   Int
+  lineNetCents   Int
+
+  @@map("credit_note_lines")
+}
+
+// ------------------------------------------------------------------
+// Rentals
+// ------------------------------------------------------------------
+
+model Rental {
+  id           Int           @id @default(autoincrement())
+  unitId       Int
+  unit         Unit          @relation(fields: [unitId], references: [id])
+  customerId   Int?
+  customer     Customer?     @relation(fields: [customerId], references: [id])
+  customerName String? // as recorded when no customer card
+  handOverDate DateTime?     @db.Date
+  startDate    DateTime      @db.Date
+  endDate      DateTime?     @db.Date
+  periodText   String? // "01.09 TO 30.09" as recorded
+  amountCents  Int
+  depositCents Int           @default(0)
+  recurring    Boolean       @default(false) // monthly rental: generate next period
+  parentId     Int?
+  parent       Rental?       @relation("RentalSeries", fields: [parentId], references: [id])
+  children     Rental[]      @relation("RentalSeries")
+  agreementSigned Boolean    @default(false)
+  notes        String?
+  status       RecordStatus  @default(ACTIVE)
+  needsReview  Boolean       @default(false)
+  reviewReason String?
+  source       EntrySource   @default(WEB)
+  importBatchId Int?
+  importBatch  ImportBatch?  @relation(fields: [importBatchId], references: [id])
+  createdById  Int?
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
+
+  entry       Entry? // the income row (holds amount/status/received-by/VAT)
+  invoices    Invoice[]
+  attachments Attachment[] // signed agreement upload
+
+  @@index([unitId, startDate])
+  @@map("rentals")
+}
+
+// ------------------------------------------------------------------
+// Expenses & purchases
+// ------------------------------------------------------------------
+
+model Expense {
+  id          Int             @id @default(autoincrement())
+  expenseDate DateTime?       @db.Date // nullable: the old records often lack dates
+  categoryId  Int
+  category    ExpenseCategory @relation(fields: [categoryId], references: [id])
+  description String
+  vendor      String?
+  qtyText     String? // "5 items", "10 pcs" — as recorded
+  grossCents  Int? // nullable: source rows sometimes miss amounts (flagged needsReview)
+  vatRateBp   Int             @default(2550)
+  hasValidReceipt Boolean     @default(false)
+  businessUsePct  Int         @default(100)
+  reclaimableVatCents Int     @default(0) // snapshot, recomputed by the service on change
+  paidById    Int?
+  paidBy      MoneyHolder?    @relation("ExpensePaidBy", fields: [paidById], references: [id])
+  jointReinvested Boolean     @default(false) // funded from rental income -> joint 50/50 investment
+  unitId      Int?
+  unit        Unit?           @relation(fields: [unitId], references: [id])
+  productId   Int? // receiving into stock
+  product     Product?        @relation(fields: [productId], references: [id])
+  purchasedFor String? // "Muaz", "General use" — as recorded
+  notes       String?
+  status      RecordStatus    @default(ACTIVE)
+  voidReason  String?
+  needsReview Boolean         @default(false)
+  reviewReason String?
+  source      EntrySource     @default(WEB)
+  importBatchId Int?
+  importBatch ImportBatch?    @relation(fields: [importBatchId], references: [id])
+  createdById Int?
+  createdAt   DateTime        @default(now())
+  updatedAt   DateTime        @updatedAt
+
+  attachments    Attachment[] // receipt photos
+  stockMovements StockMovement[]
+  investments    Investment[]
+
+  @@index([expenseDate])
+  @@index([categoryId])
+  @@map("expenses")
+}
+
+// ------------------------------------------------------------------
+// Partners: investments & cash ledger
+// ------------------------------------------------------------------
+
+enum InvestmentCategory {
+  UNITS
+  SPARE_PARTS
+  TOOLS
+  EXPENSES
+  CASH_INJECTED
+}
+
+model Investment {
+  id         Int                @id @default(autoincrement())
+  date       DateTime           @db.Date
+  holderId   Int? // Ahmed or Salman; null when isJoint
+  holder     MoneyHolder?       @relation(fields: [holderId], references: [id])
+  isJoint    Boolean            @default(false) // joint (reinvested) 50/50
+  category   InvestmentCategory
+  amountCents Int
+  expenseId  Int?
+  expense    Expense?           @relation(fields: [expenseId], references: [id])
+  unitId     Int?
+  unit       Unit?              @relation(fields: [unitId], references: [id])
+  note       String?
+  auto       Boolean            @default(false) // created automatically from an expense/unit purchase
+  status     RecordStatus       @default(ACTIVE)
+  source     EntrySource        @default(WEB)
+  createdById Int?
+  createdAt  DateTime           @default(now())
+
+  @@index([date])
+  @@map("investments")
+}
+
+model CashHandover {
+  id          Int          @id @default(autoincrement())
+  date        DateTime     @db.Date
+  fromHolderId Int
+  fromHolder  MoneyHolder  @relation("HandoverFrom", fields: [fromHolderId], references: [id])
+  toHolderId  Int // normally Company Account
+  toHolder    MoneyHolder  @relation("HandoverTo", fields: [toHolderId], references: [id])
+  amountCents Int
+  note        String?
+  status      RecordStatus @default(ACTIVE)
+  createdById Int?
+  createdAt   DateTime     @default(now())
+
+  @@index([date])
+  @@map("cash_handovers")
+}
+
+// ------------------------------------------------------------------
+// Discounts given (reportable)
+// ------------------------------------------------------------------
+
+model DiscountRecord {
+  id          Int            @id @default(autoincrement())
+  date        DateTime       @db.Date
+  amountCents Int
+  reason      String? // promotion name
+  modelId     Int?
+  model       BusinessModel? @relation(fields: [modelId], references: [id])
+  entryId     Int?
+  entry       Entry?         @relation(fields: [entryId], references: [id])
+  saleId      Int?
+  sale        Sale?          @relation(fields: [saleId], references: [id])
+  invoiceId   Int?
+  invoice     Invoice?       @relation(fields: [invoiceId], references: [id])
+  createdAt   DateTime       @default(now())
+
+  @@index([date])
+  @@map("discounts")
+}
+
+// ------------------------------------------------------------------
+// WhatsApp
+// ------------------------------------------------------------------
+
+enum WaStatus {
+  RECEIVED
+  SAVED
+  REJECTED
+  ERROR
+  UNDONE
+}
+
+model WhatsAppMessage {
+  id          Int      @id @default(autoincrement())
+  waMessageId String   @unique // Meta message id — idempotency for duplicate webhook deliveries
+  senderPhone String
+  senderName  String?
+  rawText     String
+  receivedAt  DateTime @default(now())
+  status      WaStatus @default(RECEIVED)
+  parsed      Json?
+  errorText   String?
+  replyText   String?
+  repliedAt   DateTime?
+  processedAt DateTime?
+  undoneAt    DateTime?
+  expenseId   Int?
+
+  entry Entry?
+
+  @@index([senderPhone, receivedAt])
+  @@map("whatsapp_messages")
+}
+
+// ------------------------------------------------------------------
+// Warranty claims & contract work
+// ------------------------------------------------------------------
+
+enum ClaimStatus {
+  OPEN
+  SUBMITTED
+  APPROVED
+  REJECTED
+  PAID
+}
+
+model WarrantyClaim {
+  id            Int         @id @default(autoincrement())
+  caseNumber    String      @unique // WC-2026-0001
+  company       String // warranty/insurance company
+  customerId    Int?
+  customer      Customer?   @relation(fields: [customerId], references: [id])
+  unitId        Int?
+  unit          Unit?       @relation(fields: [unitId], references: [id])
+  productId     Int?
+  product       Product?    @relation(fields: [productId], references: [id])
+  description   String
+  status        ClaimStatus @default(OPEN)
+  claimedCents  Int?
+  approvedCents Int?
+  submittedAt   DateTime?   @db.Date
+  decidedAt     DateTime?   @db.Date
+  notes         String?
+  createdById   Int?
+  createdAt     DateTime    @default(now())
+  updatedAt     DateTime    @updatedAt
+
+  attachments Attachment[]
+
+  @@map("warranty_claims")
+}
+
+model Contract {
+  id         Int       @id @default(autoincrement())
+  customerId Int // the contracting company (business customer)
+  customer   Customer  @relation(fields: [customerId], references: [id])
+  name       String // "Ryde Finland maintenance 2027"
+  terms      String?
+  ratesJson  Json? // e.g. { "perRepair": 2500, "perHour": 4500 } in cents
+  startDate  DateTime  @db.Date
+  endDate    DateTime? @db.Date
+  active     Boolean   @default(true)
+  createdAt  DateTime  @default(now())
+
+  jobs ContractJob[]
+
+  @@map("contracts")
+}
+
+model ContractJob {
+  id          Int      @id @default(autoincrement())
+  contractId  Int
+  contract    Contract @relation(fields: [contractId], references: [id])
+  date        DateTime @db.Date
+  vehicleRef  String // contractor's vehicle id (e.g. Ryde QR code)
+  description String
+  hours       Decimal? @db.Decimal(6, 2)
+  amountCents Int
+  invoiceId   Int? // set when billed on a monthly invoice
+  invoicedAt  DateTime?
+  createdById Int?
+  createdAt   DateTime @default(now())
+
+  @@index([contractId, date])
+  @@map("contract_jobs")
+}
+
+// ------------------------------------------------------------------
+// Attachments, audit, sync, email, import
+// ------------------------------------------------------------------
+
+model Attachment {
+  id         Int      @id @default(autoincrement())
+  fileName   String
+  mimeType   String
+  sizeBytes  Int
+  path       String // relative to UPLOAD_DIR
+  sha256     String?
+  uploadedById Int?
+  createdAt  DateTime @default(now())
+
+  unitId     Int?
+  unit       Unit?          @relation(fields: [unitId], references: [id])
+  expenseId  Int?
+  expense    Expense?       @relation(fields: [expenseId], references: [id])
+  rentalId   Int?
+  rental     Rental?        @relation(fields: [rentalId], references: [id])
+  invoiceId  Int?
+  invoice    Invoice?       @relation(fields: [invoiceId], references: [id])
+  claimId    Int?
+  claim      WarrantyClaim? @relation(fields: [claimId], references: [id])
+  productId  Int?
+  product    Product?       @relation(fields: [productId], references: [id])
+  customerId Int?
+  customer   Customer?      @relation(fields: [customerId], references: [id])
+
+  @@map("attachments")
+}
+
+model AuditLog {
+  id       Int      @id @default(autoincrement())
+  userId   Int?
+  user     User?    @relation(fields: [userId], references: [id])
+  action   String // CREATE / UPDATE / DELETE / VOID / LOGIN / ...
+  entity   String // table name
+  entityId String?
+  before   Json?
+  after    Json?
+  ip       String?
+  at       DateTime @default(now())
+
+  @@index([entity, entityId])
+  @@index([at])
+  @@map("audit_log")
+}
+
+enum SyncStatus {
+  OK
+  ERROR
+  RUNNING
+}
+
+model SyncLog {
+  id         Int        @id @default(autoincrement())
+  target     String // GOOGLE_SHEETS
+  startedAt  DateTime   @default(now())
+  finishedAt DateTime?
+  status     SyncStatus @default(RUNNING)
+  rowsSynced Int?
+  error      String?
+
+  @@index([target, startedAt])
+  @@map("sync_log")
+}
+
+enum EmailStatus {
+  PENDING
+  SENT
+  ERROR
+}
+
+model EmailOutbox {
+  id           Int         @id @default(autoincrement())
+  toAddress    String
+  subject      String
+  bodyHtml     String
+  attachmentId Int?
+  status       EmailStatus @default(PENDING)
+  error        String?
+  sentAt       DateTime?
+  createdAt    DateTime    @default(now())
+
+  @@map("email_outbox")
+}
+
+model ImportBatch {
+  id          Int      @id @default(autoincrement())
+  fileName    String
+  importedAt  DateTime @default(now())
+  createdById Int?
+  summary     Json // counts per table, reconciliation numbers
+  issues      Json // [{ severity, sheet, row, message }]
+
+  entries  Entry[]
+  rentals  Rental[]
+  expenses Expense[]
+  units    Unit[]
+
+  @@map("import_batches")
+}
+
+model NumberSequence {
+  key       String @id // INVOICE, RECEIPT, CREDIT_NOTE, CLAIM
+  nextValue Int    @default(1)
+
+  @@map("number_sequences")
+}

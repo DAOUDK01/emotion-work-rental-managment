@@ -1,0 +1,20 @@
+node_modules/
+dist/
+build/
+coverage/
+*.log
+.env
+.env.local
+.env.*.local
+apps/api/uploads/
+apps/web/dist/
+playwright-report/
+test-results/
+e2e/.auth/
+.DS_Store
+Thumbs.db
+*.tsbuildinfo
+.turbo/
+backups/
+# client workbook + sheet dumps contain customer names and phone numbers (GDPR) — never public
+data/source/

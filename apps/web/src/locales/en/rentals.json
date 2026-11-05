@@ -1,0 +1,142 @@
+{
+  "title": "Rentals",
+  "subtitle": "Rental periods per unit — each period is one income row in the books.",
+  "actions": {
+    "new": "New rental",
+    "generateNext": "Generate next period",
+    "generating": "Generating…",
+    "createInvoice": "Create invoice",
+    "menuFor": "Actions for rental {{unit}}"
+  },
+  "filters": {
+    "title": "Filters",
+    "search": "Search",
+    "searchPlaceholder": "Customer, unit code, period or notes",
+    "paymentStatus": "Payment status",
+    "unit": "Unit",
+    "allUnits": "All units",
+    "from": "Start from",
+    "to": "Start to",
+    "status": "Rental status",
+    "needsReview": "Needs review only",
+    "clear": "Clear filters"
+  },
+  "list": {
+    "count_one": "{{count}} rental",
+    "count_other": "{{count}} rentals",
+    "reviewCount_one": "{{count}} rental needs review",
+    "reviewCount_other": "{{count}} rentals need review",
+    "reviewScanNote_one": "Review filter checks the newest {{count}} rental matching the other filters.",
+    "reviewScanNote_other": "Review filter checks the newest {{count}} rentals matching the other filters.",
+    "emptyTitle": "No rentals yet",
+    "emptyHint": "Add the first rental period — the income entry is created automatically.",
+    "noMatchTitle": "No rentals match these filters",
+    "noMatchHint": "Try a wider date range or clear the filters.",
+    "pagination": "Pagination",
+    "lookupsError": "Units, receivers or payment methods could not be loaded — the dropdowns may be empty."
+  },
+  "table": {
+    "unit": "Unit",
+    "customer": "Customer",
+    "period": "Period",
+    "amount": "Amount",
+    "deposit": "Deposit",
+    "payment": "Payment",
+    "receivedBy": "Received by",
+    "agreement": "Agreement signed",
+    "agreementShort": "Agreement",
+    "agreementSigned": "Agreement signed",
+    "agreementMissing": "Agreement not signed",
+    "recurring": "Recurring monthly",
+    "unlinked": "Not linked to a customer record",
+    "noEntry": "No income entry"
+  },
+  "recurring": {
+    "title": "Upcoming & recurring",
+    "description": "Recurring rentals and their latest period. The next month generates automatically once a period ends — or generate it now.",
+    "count_one": "{{count}} series",
+    "count_other": "{{count}} series",
+    "empty": "No recurring rentals. Tick “Recurring monthly” on a rental to have the next month generated automatically.",
+    "due": "Period ended",
+    "latest": "Latest period",
+    "next": "Next",
+    "periods_one": "{{count}} period so far",
+    "periods_other": "{{count}} periods so far"
+  },
+  "form": {
+    "createTitle": "New rental",
+    "editTitle": "Edit rental",
+    "unit": "Unit",
+    "selectUnit": "Select a unit…",
+    "unitNotAvailable": "This unit is currently “{{status}}”, not available. Check it is really free before renting it out.",
+    "customer": "Customer",
+    "customerPlaceholder": "Type to search customers, or enter a name",
+    "customerHint": "Search an existing customer to link, or just type a name.",
+    "freeTextHint": "Pick a match below to link the customer — otherwise the name is saved as free text.",
+    "linkedHint": "Linked to the customer record.",
+    "customerMatches": "Matching customers",
+    "linkCustomer": "Link",
+    "unlink": "Unlink",
+    "searching": "Searching…",
+    "handOverDate": "Hand-over date",
+    "startDate": "Start date",
+    "endDate": "End date",
+    "openEnded": "Leave empty for an open-ended monthly rental.",
+    "periodText": "Period text",
+    "periodHint": "Suggested from the dates as “DD.MM TO DD.MM” — you can edit it.",
+    "deposit": "Deposit (€)",
+    "paymentStatus": "Payment status",
+    "receivedByHint": "Required when the status is Paid.",
+    "recurring": "Recurring monthly",
+    "recurringHint": "The next month generates automatically when this period ends (same unit, customer and amount, not yet billed).",
+    "agreementSigned": "Rental agreement signed",
+    "attachments": "Agreement (PDF or photo)",
+    "upload": "Upload agreement file",
+    "uploadHint": "PDF or image of the signed agreement.",
+    "uploading": "Uploading…",
+    "uploadAfterSave": "You can attach the signed agreement right after saving.",
+    "noAttachments": "No files attached yet.",
+    "savedNowUpload": "Rental saved. Attach the signed agreement now, or close and do it later from Edit.",
+    "skipUpload": "Skip for now",
+    "saving": "Saving…",
+    "validation": {
+      "unitRequired": "Choose a unit",
+      "startRequired": "Start date is required",
+      "amountInvalid": "Enter a valid amount, e.g. 45 or 45,50",
+      "discountTooBig": "The discount cannot be larger than the amount",
+      "endBeforeStart": "End date cannot be before the start date",
+      "receivedByRequired": "Choose who received the money",
+      "tooLong": "Too long"
+    }
+  },
+  "markPaid": {
+    "title": "Mark rental paid",
+    "selectReceiver": "Who received the money?",
+    "dateNote": "The payment is recorded on the rental start date ({{date}})."
+  },
+  "void": {
+    "title": "Void rental",
+    "message": "Void the rental of {{unit}} for {{period}}? Its income entry is voided too. This cannot be undone.",
+    "reason": "Reason",
+    "reasonPlaceholder": "Why is this rental voided?",
+    "reasonRequired": "A reason is required"
+  },
+  "toasts": {
+    "markedPaid": "Rental marked as paid",
+    "nextGenerated": "Next period created for {{unit}}: {{period}}",
+    "periodExists": "The next period already exists for this rental.",
+    "agreementUploaded": "Agreement attached"
+  },
+  "unitStatus": {
+    "AVAILABLE": "Available",
+    "ON_RENT": "On rent",
+    "WAITING_PARTS": "Waiting for parts",
+    "IN_REPAIR": "In repair",
+    "SOLD": "Sold",
+    "DISPOSED": "Disposed"
+  },
+  "customerType": {
+    "INDIVIDUAL": "Private customer",
+    "BUSINESS": "Business customer"
+  }
+}

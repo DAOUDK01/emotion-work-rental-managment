@@ -1,0 +1,95 @@
+{
+  "title": "Partners",
+  "subtitle": "Who invested what, who holds the cash, salaries and the 50/50 profit split",
+  "scopeNote": "Investments, cash held and payables are all-time balances. Cash collected, salaries and profit follow the selected period.",
+  "refreshed": "Figures updated",
+  "scope": {
+    "allTime": "All time",
+    "period": "Selected period"
+  },
+  "empty": {
+    "title": "No partners set up yet",
+    "hint": "Add the partners as money holders in Settings to see investments, cash held and the profit split here.",
+    "openSettings": "Open Settings"
+  },
+  "invested": {
+    "title": "Total invested",
+    "joint": "Joint (reinvested)",
+    "note": "Joint = rental income put into spare parts. Profit split 50/50.",
+    "total": "Total capital: {{amount}}",
+    "empty": "No investments recorded yet",
+    "emptyHint": "Units and purchases paid personally by a partner, and cash injections, appear here automatically."
+  },
+  "whoPaid": {
+    "title": "Who paid for what",
+    "description": "Personal investments per partner by category",
+    "category": "Category"
+  },
+  "categories": {
+    "UNITS": "Units",
+    "SPARE_PARTS": "Spare parts",
+    "TOOLS": "Tools",
+    "EXPENSES": "Expenses",
+    "CASH_INJECTED": "Cash injected"
+  },
+  "collected": {
+    "title": "Cash collected by",
+    "description": "Money received per holder in the selected period",
+    "empty": "No money collected in this period",
+    "chipLabel": "{{name}} collected {{amount}}"
+  },
+  "holding": {
+    "title": "Currently holding",
+    "description": "Money received but not yet handed over to the company account",
+    "holder": "Holder",
+    "holding": "Holding",
+    "oldest": "Oldest unsettled",
+    "companyAccount": "Company account",
+    "overdue": "Overdue",
+    "overdueHint": "Held longer than {{days}} days — please settle",
+    "settle": "Settle",
+    "view": "View",
+    "settleAria": "Settle cash held by {{name}}",
+    "viewAria": "View cash held by {{name}}",
+    "datesLoading": "Loading settlement dates…",
+    "datesError": "Settlement dates could not be loaded.",
+    "empty": "No money holders"
+  },
+  "salaries": {
+    "title": "Salaries",
+    "description": "Monthly rate at the end of the period and the total for the period",
+    "partner": "Partner",
+    "monthly": "Monthly",
+    "periodTotal": "Period total",
+    "empty": "No salaries set",
+    "emptyHint": "Partner salaries are deducted from the profit before the 50/50 split.",
+    "hint": "Salaries are set in Settings.",
+    "openSettings": "Set in Settings"
+  },
+  "profit": {
+    "title": "Profit",
+    "description": "Net profit for the period, salaries deducted, then split 50/50",
+    "netProfit": "Net profit",
+    "beforeSalaries": "before salaries",
+    "salaries": "Salaries",
+    "afterSalaries": "After salaries",
+    "howCalculated": "How the net profit is calculated",
+    "revenueNet": "Revenue (excl. VAT, after discounts)",
+    "expenses": "Operating expenses",
+    "cogs": "Cost of goods sold",
+    "unitPurchases": "Unit purchases",
+    "unitPurchasesExcluded": "not counted as cost",
+    "split": "Split 50/50",
+    "noPartners": "No active partners to split the profit between.",
+    "shareOf": "{{name}}'s share",
+    "taxEstimate": "Tax estimate ({{rate}})",
+    "noTaxOnLoss": "No tax on a loss",
+    "afterTax": "After tax",
+    "taxNote": "Estimate only — the accountant confirms the final tax."
+  },
+  "payables": {
+    "title": "Company owes partners",
+    "note": "Display only — repayments to partners are not tracked here.",
+    "line": "Company owes {{name}} {{amount}} for personally-paid purchases"
+  }
+}

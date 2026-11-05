@@ -1,0 +1,142 @@
+{
+  "title": "WhatsApp-saapuneet",
+  "description": "Kaikki yrityksen WhatsApp-numeroon lähetetyt viestit — mitä botti tallensi ja mitä se vastasi.",
+  "actions": {
+    "simulate": "Simuloi viesti",
+    "reject": "Hylkää",
+    "reparse": "Jäsennä uudelleen",
+    "showMore": "Näytä lisää",
+    "showLess": "Näytä vähemmän"
+  },
+  "filters": {
+    "status": "Tila",
+    "clear": "Tyhjennä suodattimet"
+  },
+  "status": {
+    "RECEIVED": "Komento",
+    "SAVED": "Tallennettu",
+    "ERROR": "Virhe",
+    "REJECTED": "Hylätty",
+    "UNDONE": "Peruttu"
+  },
+  "table": {
+    "receivedAt": "Vastaanotettu",
+    "sender": "Lähettäjä",
+    "message": "Viesti",
+    "parsed": "Tallennettu kirjauksena",
+    "reply": "Botin vastaus",
+    "noReply": "Ei vastausta",
+    "undoneAt": "Peruttu {{time}}",
+    "showing": "Näytetään {{from}}–{{to}} / {{total}}"
+  },
+  "summary": {
+    "command": "HELP- / UNDO-komento — mitään ei tallennettu",
+    "nothing": "Mitään ei tallennettu",
+    "unit": "Laite {{code}}",
+    "receivedBy": "vastaanottaja {{name}}",
+    "paidBy": "maksaja {{name}}",
+    "pending": "maksu odottaa",
+    "vat": "ALV-lasku",
+    "noVat": "ei ALV-laskua",
+    "voided": "Mitätöity",
+    "entry": "Kirjaus #{{id}}",
+    "expense": "Kulu #{{id}}",
+    "openEntriesHint": "Avaa Lisää kirjaus — kirjaus näkyy viimeisimpien kirjausten listassa",
+    "openExpensesHint": "Avaa kululista"
+  },
+  "models": {
+    "RENTAL": "Vuokraus",
+    "REPAIR": "Korjaus",
+    "SPARE_PARTS": "Varaosat",
+    "UNIT_SALES": "Laitemyynti",
+    "CONTRACT": "Sopimustyö"
+  },
+  "reject": {
+    "tooltip": "Merkitse hylätyksi ja mitätöi viestin luoma kirjaus tai kulu",
+    "title": "Hylkää WhatsApp-viesti",
+    "messageLinked": "Hylkääminen mitätöi tämän viestin luoman kirjauksen tai kulun (ja siitä johdetun osakkaan sijoituksen). Mitätöity rivi jää kirjanpitoon kirjausketjua varten, mutta sitä ei enää lasketa summiin. Lähettäjälle ei ilmoiteta.",
+    "messageNoLink": "Viestillä ei ole voimassa olevaa kirjausta tai kulua, joten mitään ei mitätöidä — viesti vain merkitään hylätyksi. Lähettäjälle ei ilmoiteta.",
+    "linkedEntry": "Mitätöidään: kirjaus #{{id}} — {{model}} {{amount}}",
+    "linkedExpense": "Mitätöidään: kulu #{{id}} — {{vendor}} {{amount}}",
+    "reason": "Syy",
+    "reasonHint": "Tallennetaan muutoslokiin ja näytetään viestin kohdalla.",
+    "reasonPlaceholder": "esim. Väärä summa, kirjattu käsin uudelleen",
+    "confirm": "Hylkää ja mitätöi",
+    "rejecting": "Hylätään…",
+    "success": "Viesti hylätty",
+    "successVoided": "Viesti hylätty — siihen liittyvä rivi mitätöitiin"
+  },
+  "reparse": {
+    "tooltip": "Aja viesti jäsentimen läpi uudelleen",
+    "title": "Jäsennä viesti uudelleen",
+    "message": "Viesti käsitellään samalla tavalla kuin uusi WhatsApp-viesti. Jos se jäsentyy, uusi kirjaus tai kulu tallennetaan ja botti lähettää vastauksensa lähettäjälle uudelleen.",
+    "lastError": "Edellinen virhe",
+    "allowListNote": "Lähettäjän on yhä oltava sallittujen numeroiden listalla (Asetukset → WhatsApp), muuten viesti hylätään uudelleen.",
+    "confirm": "Jäsennä uudelleen",
+    "working": "Jäsennetään…",
+    "saved": "Jäsennetty uudelleen ja tallennettu",
+    "replied": "Jäsennetty uudelleen — botti vastasi, mitään ei tallennettu",
+    "notSaved": "Uudelleenjäsennys ei tallentanut mitään ({{status}})"
+  },
+  "simulate": {
+    "title": "Simuloi WhatsApp-viesti",
+    "intro": "Käsittelee viestin täsmälleen samalla tavalla kuin Metan kautta tulevan viestin — kirjaukset tallentuvat oikeasti. Käytä tätä muodon testaamiseen ennen kuin Meta on kytketty. Vastaus näytetään tässä eikä sitä lähetetä.",
+    "from": "Lähettäjän puhelinnumero",
+    "fromHint": "Numeron on oltava sallittujen listalla (Asetukset → WhatsApp), kansainvälisessä muodossa.",
+    "text": "Viesti",
+    "textHint": "Ensimmäinen rivi on kirjaus; seuraavat rivit tallennetaan muistiinpanoiksi. Ctrl+Enter lähettää.",
+    "placeholder": "RENT | EE2-251001 | 45 | cash | Salman\nMuistiinpanot seuraavalle riville",
+    "examples": "Lisää esimerkki",
+    "useExample": "Kopioi tämä esimerkki viestikenttään",
+    "send": "Lähetä",
+    "sending": "Lähetetään…",
+    "replyTitle": "Botin vastaus",
+    "noReply": "Botti ei vastannut tähän viestiin.",
+    "savedToast": "Simuloitu viesti tallennettu",
+    "notAllowed": "Numero ei ole sallittujen listalla. Lisää se kohdassa"
+  },
+  "setup": {
+    "title": "Käyttöönoton tarkistuslista",
+    "intro": "Viestejä ei ole vielä tullut. Yrityksen WhatsApp-numeron kytkemisen ohjeet ovat kokonaisuudessaan tiedostossa",
+    "stepAccount": "Luo ja vahvista Meta Business -tili sekä WhatsApp Business -tili omalla numerolla (jota ei käytetä henkilökohtaisessa WhatsAppissa).",
+    "stepWebhook": "Aseta Metan kehittäjäkonsolissa tämä webhook-osoite palvelimen .env-tiedoston vahvistustunnuksella ja tilaa \"messages\"-tapahtumat:",
+    "webhookLabel": "Webhook-osoite",
+    "copy": "Kopioi",
+    "copied": "Webhook-osoite kopioitu",
+    "copyFailed": "Kopiointi ei onnistunut — valitse osoite ja kopioi se käsin.",
+    "stepEnv": "Lisää käyttöoikeustunnus (access token), sovelluksen salaisuus (app secret) ja puhelinnumeron tunnus (phone number ID) palvelimen .env-tiedostoon ja käynnistä palvelin uudelleen.",
+    "stepAllowList": "Lisää osakkaiden puhelinnumerot sallittujen listalle kohdassa",
+    "settingsLink": "Asetukset → WhatsApp",
+    "stepTest": "Testaa koko kulku heti, ilman Metaa:"
+  },
+  "help": {
+    "title": "Viestin muoto",
+    "intro": "Yksi rivi, kentät erotetaan pystyviivalla |. Avainsanat (RENT, REPAIR, PART, SALE, EXP) kirjoitetaan englanniksi; isoilla ja pienillä kirjaimilla ei ole väliä.",
+    "formats": {
+      "rent": "RENT | laite | summa | maksutapa | vastaanottaja",
+      "repair": "REPAIR | summa | labour 50 parts 30 | maksutapa | vastaanottaja",
+      "part": "PART | tuotteen nimi | summa | maksutapa | vastaanottaja",
+      "sale": "SALE | laite | summa | maksutapa | vastaanottaja",
+      "exp": "EXP | myyjä | summa | maksaja | kululuokka"
+    },
+    "payment": "Maksutapa: cash, bank, card, mobilepay, revolut, wise, paypal",
+    "people": "Vastaanottaja / maksaja: Ahmed, Salman, Company Account, Cash",
+    "discount": "Alennus: lisää \"DISC 5\" summan perään. VAT / NOVAT ohittaa ALV-laskun oletuksen.",
+    "notes": "Kirjoita muistiinpanot seuraavalle riville.",
+    "undo": "UNDO peruu lähettäjän viimeisimmän kirjauksen (10 minuutin sisällä).",
+    "sendHelp": "Kun numeroon lähettää HELP, botti vastaa tällä listalla.",
+    "examples": "Esimerkit"
+  },
+  "empty": {
+    "title": "WhatsApp-viestejä ei vielä ole",
+    "hint": "Viestit näkyvät tässä heti, kun osakkaat kirjoittavat yrityksen numeroon. Voit kokeilla nyt simuloidulla viestillä.",
+    "filteredTitle": "Yksikään viesti ei vastaa suodattimia",
+    "filteredHint": "Valitse toinen tila tai aikaväli, tai tyhjennä suodattimet."
+  },
+  "validation": {
+    "reasonRequired": "Kerro hylkäämisen syy",
+    "phone": "Käytä kansainvälistä numeroa, esim. +358401234567",
+    "textRequired": "Kirjoita viesti",
+    "textTooLong": "Viesti on liian pitkä (enintään 4096 merkkiä)"
+  }
+}

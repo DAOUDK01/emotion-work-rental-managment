@@ -1,0 +1,84 @@
+# E Motion Works — one-VPS deployment: web (nginx) + api + postgres + worker-in-api
+# Usage:  cp .env.example .env   (fill in values)   then:  docker compose up -d --build
+services:
+  postgres:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: emotionfix
+      POSTGRES_USER: emotionfix
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-emotionfix}
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+      - ./backups:/backups
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U emotionfix -d emotionfix']
+      interval: 5s
+      timeout: 3s
+      retries: 20
+
+  api:
+    build:
+      context: .
+      dockerfile: apps/api/Dockerfile
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      NODE_ENV: production
+      PORT: 4000
+      DATABASE_URL: postgresql://emotionfix:${POSTGRES_PASSWORD:-emotionfix}@postgres:5432/emotionfix
+      DIRECT_URL: postgresql://emotionfix:${POSTGRES_PASSWORD:-emotionfix}@postgres:5432/emotionfix
+      CORS_ORIGINS: ${CORS_ORIGINS:-http://localhost:8080}
+      JWT_SECRET: ${JWT_SECRET:?set JWT_SECRET in .env}
+      COOKIE_SECURE: ${COOKIE_SECURE:-false}
+      SEED_ADMIN_PASSWORD: ${SEED_ADMIN_PASSWORD:-ChangeMe!123}
+      UPLOAD_DIR: /app/apps/api/uploads
+      WHATSAPP_VERIFY_TOKEN: ${WHATSAPP_VERIFY_TOKEN:-}
+      WHATSAPP_APP_SECRET: ${WHATSAPP_APP_SECRET:-}
+      WHATSAPP_ACCESS_TOKEN: ${WHATSAPP_ACCESS_TOKEN:-}
+      WHATSAPP_PHONE_NUMBER_ID: ${WHATSAPP_PHONE_NUMBER_ID:-}
+      GOOGLE_SERVICE_ACCOUNT_FILE: ${GOOGLE_SERVICE_ACCOUNT_FILE:-}
+      GOOGLE_SHEET_ID: ${GOOGLE_SHEET_ID:-}
+      SMTP_HOST: ${SMTP_HOST:-}
+      SMTP_PORT: ${SMTP_PORT:-587}
+      SMTP_SECURE: ${SMTP_SECURE:-false}
+      SMTP_USER: ${SMTP_USER:-}
+      SMTP_PASS: ${SMTP_PASS:-}
+      SMTP_FROM: ${SMTP_FROM:-E Motion Works Oy <billing@example.com>}
+    volumes:
+      - uploads:/app/apps/api/uploads
+      - ${GOOGLE_KEY_DIR:-./secrets}:/secrets:ro
+
+  web:
+    build:
+      context: .
+      dockerfile: apps/web/Dockerfile
+    restart: unless-stopped
+    depends_on:
+      - api
+    ports:
+      - '${WEB_PORT:-8080}:80'
+
+  # daily backup at 03:15 — keeps 14 days of dumps in ./backups
+  backup:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      PGPASSWORD: ${POSTGRES_PASSWORD:-emotionfix}
+    volumes:
+      - ./backups:/backups
+    entrypoint: >
+      sh -c 'while true; do
+        sleep $$(( ( $$(date -d "03:15 tomorrow" +%s 2>/dev/null || date -D "%H:%M" -d "03:15" +%s) - $$(date +%s) + 86400 ) % 86400 ));
+        pg_dump -h postgres -U emotionfix emotionfix | gzip > /backups/emotionfix-$$(date +%F).sql.gz;
+        ls -1t /backups/emotionfix-*.sql.gz | tail -n +15 | xargs -r rm;
+      done'
+
+volumes:
+  pgdata:
+  uploads:

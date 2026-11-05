@@ -1,0 +1,142 @@
+{
+  "title": "Vuokraukset",
+  "subtitle": "Vuokrakaudet laitteittain — jokainen kausi on yksi tulokirjaus kirjanpidossa.",
+  "actions": {
+    "new": "Uusi vuokraus",
+    "generateNext": "Luo seuraava kausi",
+    "generating": "Luodaan…",
+    "createInvoice": "Luo lasku",
+    "menuFor": "Vuokrauksen {{unit}} toiminnot"
+  },
+  "filters": {
+    "title": "Suodattimet",
+    "search": "Haku",
+    "searchPlaceholder": "Asiakas, laitetunnus, kausi tai muistiinpanot",
+    "paymentStatus": "Maksun tila",
+    "unit": "Laite",
+    "allUnits": "Kaikki laitteet",
+    "from": "Alkaen (aloituspäivä)",
+    "to": "Asti (aloituspäivä)",
+    "status": "Vuokrauksen tila",
+    "needsReview": "Vain tarkistettavat",
+    "clear": "Tyhjennä suodattimet"
+  },
+  "list": {
+    "count_one": "{{count}} vuokraus",
+    "count_other": "{{count}} vuokrausta",
+    "reviewCount_one": "{{count}} vuokraus tarkistettavana",
+    "reviewCount_other": "{{count}} vuokrausta tarkistettavana",
+    "reviewScanNote_one": "Tarkistussuodatin käy läpi uusimman {{count}} muut suodattimet täyttävän vuokrauksen.",
+    "reviewScanNote_other": "Tarkistussuodatin käy läpi uusimmat {{count}} muut suodattimet täyttävää vuokrausta.",
+    "emptyTitle": "Ei vielä vuokrauksia",
+    "emptyHint": "Lisää ensimmäinen vuokrakausi — tulokirjaus syntyy automaattisesti.",
+    "noMatchTitle": "Yksikään vuokraus ei vastaa suodattimia",
+    "noMatchHint": "Kokeile laajempaa aikaväliä tai tyhjennä suodattimet.",
+    "pagination": "Sivutus",
+    "lookupsError": "Laitteita, vastaanottajia tai maksutapoja ei voitu ladata — valikot voivat olla tyhjiä."
+  },
+  "table": {
+    "unit": "Laite",
+    "customer": "Asiakas",
+    "period": "Kausi",
+    "amount": "Summa",
+    "deposit": "Vakuus",
+    "payment": "Maksu",
+    "receivedBy": "Vastaanottaja",
+    "agreement": "Sopimus allekirjoitettu",
+    "agreementShort": "Sopimus",
+    "agreementSigned": "Sopimus allekirjoitettu",
+    "agreementMissing": "Sopimusta ei allekirjoitettu",
+    "recurring": "Toistuu kuukausittain",
+    "unlinked": "Ei liitetty asiakasrekisteriin",
+    "noEntry": "Ei tulokirjausta"
+  },
+  "recurring": {
+    "title": "Tulevat ja toistuvat",
+    "description": "Toistuvat vuokraukset ja niiden viimeisin kausi. Seuraava kuukausi luodaan automaattisesti, kun kausi päättyy — tai voit luoda sen nyt.",
+    "count_one": "{{count}} sarja",
+    "count_other": "{{count}} sarjaa",
+    "empty": "Ei toistuvia vuokrauksia. Valitse vuokraukselle ”Toistuu kuukausittain”, niin seuraava kuukausi luodaan automaattisesti.",
+    "due": "Kausi päättynyt",
+    "latest": "Viimeisin kausi",
+    "next": "Seuraava",
+    "periods_one": "{{count}} kausi tähän mennessä",
+    "periods_other": "{{count}} kautta tähän mennessä"
+  },
+  "form": {
+    "createTitle": "Uusi vuokraus",
+    "editTitle": "Muokkaa vuokrausta",
+    "unit": "Laite",
+    "selectUnit": "Valitse laite…",
+    "unitNotAvailable": "Laitteen tila on nyt ”{{status}}”, ei vapaana. Varmista, että laite on oikeasti vapaa ennen vuokraamista.",
+    "customer": "Asiakas",
+    "customerPlaceholder": "Hae asiakasta kirjoittamalla tai syötä nimi",
+    "customerHint": "Hae olemassa oleva asiakas liitettäväksi tai kirjoita pelkkä nimi.",
+    "freeTextHint": "Valitse osuma alta liittääksesi asiakkaan — muuten nimi tallennetaan vapaana tekstinä.",
+    "linkedHint": "Liitetty asiakasrekisteriin.",
+    "customerMatches": "Löytyneet asiakkaat",
+    "linkCustomer": "Liitä",
+    "unlink": "Poista liitos",
+    "searching": "Haetaan…",
+    "handOverDate": "Luovutuspäivä",
+    "startDate": "Alkamispäivä",
+    "endDate": "Päättymispäivä",
+    "openEnded": "Jätä tyhjäksi, jos kyseessä on toistaiseksi voimassa oleva kuukausivuokra.",
+    "periodText": "Kauden teksti",
+    "periodHint": "Ehdotetaan päivistä muodossa ”PP.KK TO PP.KK” — voit muokata sitä.",
+    "deposit": "Vakuus (€)",
+    "paymentStatus": "Maksun tila",
+    "receivedByHint": "Pakollinen, kun tila on Maksettu.",
+    "recurring": "Toistuu kuukausittain",
+    "recurringHint": "Seuraava kuukausi luodaan automaattisesti, kun tämä kausi päättyy (sama laite, asiakas ja summa, ei vielä laskutettu).",
+    "agreementSigned": "Vuokrasopimus allekirjoitettu",
+    "attachments": "Sopimus (PDF tai kuva)",
+    "upload": "Lataa sopimustiedosto",
+    "uploadHint": "PDF tai kuva allekirjoitetusta sopimuksesta.",
+    "uploading": "Ladataan…",
+    "uploadAfterSave": "Voit liittää allekirjoitetun sopimuksen heti tallennuksen jälkeen.",
+    "noAttachments": "Ei vielä liitettyjä tiedostoja.",
+    "savedNowUpload": "Vuokraus tallennettu. Liitä allekirjoitettu sopimus nyt tai sulje ja tee se myöhemmin Muokkaa-toiminnosta.",
+    "skipUpload": "Ohita toistaiseksi",
+    "saving": "Tallennetaan…",
+    "validation": {
+      "unitRequired": "Valitse laite",
+      "startRequired": "Alkamispäivä on pakollinen",
+      "amountInvalid": "Anna kelvollinen summa, esim. 45 tai 45,50",
+      "discountTooBig": "Alennus ei voi olla summaa suurempi",
+      "endBeforeStart": "Päättymispäivä ei voi olla ennen alkamispäivää",
+      "receivedByRequired": "Valitse, kuka vastaanotti rahat",
+      "tooLong": "Liian pitkä"
+    }
+  },
+  "markPaid": {
+    "title": "Merkitse vuokraus maksetuksi",
+    "selectReceiver": "Kuka vastaanotti rahat?",
+    "dateNote": "Maksu kirjataan vuokrauksen alkamispäivälle ({{date}})."
+  },
+  "void": {
+    "title": "Mitätöi vuokraus",
+    "message": "Mitätöidäänkö laitteen {{unit}} vuokraus kaudelta {{period}}? Myös sen tulokirjaus mitätöidään. Toimintoa ei voi perua.",
+    "reason": "Syy",
+    "reasonPlaceholder": "Miksi vuokraus mitätöidään?",
+    "reasonRequired": "Syy on pakollinen"
+  },
+  "toasts": {
+    "markedPaid": "Vuokraus merkitty maksetuksi",
+    "nextGenerated": "Seuraava kausi luotu laitteelle {{unit}}: {{period}}",
+    "periodExists": "Tämän vuokrauksen seuraava kausi on jo olemassa.",
+    "agreementUploaded": "Sopimus liitetty"
+  },
+  "unitStatus": {
+    "AVAILABLE": "Vapaana",
+    "ON_RENT": "Vuokralla",
+    "WAITING_PARTS": "Odottaa osia",
+    "IN_REPAIR": "Korjauksessa",
+    "SOLD": "Myyty",
+    "DISPOSED": "Poistettu käytöstä"
+  },
+  "customerType": {
+    "INDIVIDUAL": "Yksityisasiakas",
+    "BUSINESS": "Yritysasiakas"
+  }
+}

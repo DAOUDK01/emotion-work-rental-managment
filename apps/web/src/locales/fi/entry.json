@@ -1,0 +1,180 @@
+{
+  "title": "Lisää kirjaus",
+  "subtitle": "Kirjaa tulot, kulut ja osakkaiden sijoitukset — ALV lasketaan kirjoittaessasi.",
+  "tabs": {
+    "income": "Tulo",
+    "expense": "Kulu",
+    "investment": "Sijoitus"
+  },
+  "empty": {
+    "noModelsTitle": "Liiketoimintatyyppejä ei ole määritetty",
+    "noModelsHint": "Lisää vähintään yksi liiketoimintatyyppi (esim. Vuokraus, Korjaus) asetuksissa ennen tulojen kirjaamista.",
+    "noCategoriesTitle": "Kululuokkia ei ole määritetty",
+    "noCategoriesHint": "Lisää kululuokat asetuksissa ennen kulujen kirjaamista."
+  },
+  "fields": {
+    "unit": "Yksikkö",
+    "paymentStatus": "Maksun tila",
+    "notSet": "— Ei valittu —",
+    "category": "Luokka",
+    "description": "Kuvaus",
+    "vendor": "Myyjä",
+    "businessUse": "Liiketoimintakäyttö %"
+  },
+  "actions": {
+    "clear": "Tyhjennä lomake",
+    "saving": "Tallennetaan…"
+  },
+  "validation": {
+    "dateRequired": "Valitse kelvollinen päivämäärä",
+    "typeRequired": "Valitse tulon tyyppi",
+    "categoryRequired": "Valitse luokka",
+    "descriptionRequired": "Kuvaile, mitä ostettiin",
+    "rateRequired": "Valitse ALV-kanta",
+    "amountInvalid": "Anna nollaa suurempi summa, esim. 45 tai 45,50",
+    "discountTooHigh": "Alennus ei voi olla summaa suurempi",
+    "receivedByRequired": "Valitse rahan vastaanottaja, kun tila on Maksettu",
+    "pctInvalid": "Anna kokonaisluku väliltä 0–100",
+    "partnerRequired": "Valitse osakas tai vaihda yhteiseksi",
+    "reasonRequired": "Syy on pakollinen",
+    "tooLong": "Teksti on liian pitkä"
+  },
+  "pickers": {
+    "unitPlaceholder": "Hae yksikön tunnuksella, merkillä tai mallilla…",
+    "loadingUnits": "Ladataan yksiköitä…",
+    "noUnits": "Hakua vastaavaa yksikköä ei löytynyt",
+    "unitsFailed": "Yksikköluettelon lataus epäonnistui.",
+    "clearUnit": "Poista valittu yksikkö",
+    "customerPlaceholder": "Kirjoita nimi — tai valitse tallennettu asiakas",
+    "searching": "Haetaan tallennettuja asiakkaita…",
+    "noCustomers": "Tallennettua asiakasta ei löytynyt — nimi tallennetaan kirjoitetussa muodossa",
+    "customersFailed": "Asiakashaku epäonnistui — nimi tallennetaan kirjoitetussa muodossa",
+    "unlink": "Poista linkitys"
+  },
+  "customerType": {
+    "INDIVIDUAL": "Yksityinen",
+    "BUSINESS": "Yritys"
+  },
+  "income": {
+    "type": "Tyyppi",
+    "selectType": "Valitse tyyppi…",
+    "unitHint": "Valinnainen — liittää tulon skootteriin takaisinmaksun seurantaa varten.",
+    "customer": "Asiakas",
+    "customerHint": "Valinnainen. Vapaa teksti tai tallennettu asiakas listasta.",
+    "customerLinkedHint": "Linkitetty tallennettuun asiakkaaseen.",
+    "amountGross": "Summa € (sis. ALV)",
+    "amountNet": "Summa € (veroton, ilman ALV:tä)",
+    "enterNet": "Syötä veroton hinta (ALV lisätään päälle)",
+    "netNeedsVatInvoice": "Ilman ALV-laskua summa on ALV:tonta tuloa, joten sitä käytetään sellaisenaan.",
+    "rateUnusedHint": "Ei käytössä — ALV-laskua ei ole annettu.",
+    "discountReasonPlaceholder": "esim. opiskelija-alennus, kanta-asiakas",
+    "vatDefaultHint": "Esitäytetty rahan vastaanottajan ja maksutavan mukaan — voit muuttaa sitä.",
+    "receivedByHint": "Pakollinen, kun tila on Maksettu.",
+    "notesPlaceholder": "Mitä myytiin tai tehtiin — näkyy kirjauksen kuvauksena",
+    "submit": "Tallenna tulo",
+    "success": {
+      "title": "Tallennettu: {{amount}} — {{model}}",
+      "paybackRemainingPct": "Yksiköstä {{code}} puuttuu {{amount}} takaisinmaksuun ({{pct}} katettu).",
+      "paybackRemaining": "Yksiköstä {{code}} puuttuu {{amount}} takaisinmaksuun.",
+      "paidBack": "Yksikkö {{code}} on maksanut itsensä takaisin — tähän mennessä ansaittu {{earned}}.",
+      "paybackNoCost": "Yksikkö {{code}} on ansainnut tähän mennessä {{earned}} (ostohintaa ei ole kirjattu).",
+      "needsReview": "Tämä kirjaus merkittiin tarkistettavaksi."
+    }
+  },
+  "expense": {
+    "selectCategory": "Valitse luokka…",
+    "descriptionPlaceholder": "esim. jarrupalat, liiketilan vuokra maaliskuu",
+    "vendorPlaceholder": "esim. Motonet, K-Rauta",
+    "amount": "Summa € (sis. ALV)",
+    "validReceipt": "Kelvollinen ALV-kuitti?",
+    "noReceiptHint": "Ilman kelvollista ALV-kuittia arvonlisäveroa ei voi vähentää.",
+    "businessUseHint": "Liiketoiminnan osuus käytöstä (100 = kokonaan liiketoimintaa).",
+    "paidByHint": "Kuka maksoi. Osakkaan omat rahat kirjataan hänen sijoituksekseen.",
+    "jointReinvested": "Yhteinen uudelleensijoitus (50/50)",
+    "jointHint": "Maksettu yhteisestä voitosta — kirjataan yhteiseksi sijoitukseksi, jaetaan 50/50.",
+    "unitHint": "Valinnainen — esim. tietyn skootterin osat tai korjaukset.",
+    "receipt": "Kuitin kuva",
+    "receiptHint": "JPEG, PNG, WebP, HEIC tai PDF, enintään 10 Mt. Ladataan, kun kulu on tallennettu.",
+    "removeReceipt": "Poista valittu kuittitiedosto",
+    "fileTooLarge": "Tiedosto on suurempi kuin 10 Mt",
+    "receiptUploaded": "Kuitti ladattu",
+    "receiptFailed": "Kulu tallennettiin, mutta kuitin lataus epäonnistui. {{message}}",
+    "submit": "Tallenna kulu",
+    "success": {
+      "title": "Tallennettu: {{amount}} — {{description}}",
+      "reclaim": "Vähennettävä ALV: {{amount}}",
+      "receiptUploading": "Ladataan kuittia {{name}}…",
+      "receiptRetry": "Kuittia ei liitetty — valitse tiedosto uudelleen yrittääksesi uudelleen.",
+      "voided": "Tämä kulu mitätöitiin kaksoiskappaleena."
+    }
+  },
+  "duplicates": {
+    "title": "Mahdollinen kaksoiskirjaus",
+    "message_one": "Uudella kululla #{{id}} on sama myyjä ja summa kuin olemassa olevalla kululla 3 päivän sisällä. Säilytä se, jos kyseessä on erillinen ostos, tai mitätöi se.",
+    "message_other": "Uudella kululla #{{id}} on sama myyjä ja summa kuin {{count}} olemassa olevalla kululla 3 päivän sisällä. Säilytä se, jos kyseessä on erillinen ostos, tai mitätöi se.",
+    "expense": "Kulu",
+    "noDate": "Ei päivämäärää",
+    "keep": "Säilytä — erillinen ostos",
+    "voidNew": "Mitätöi uusi kulu",
+    "confirmTitle": "Mitätöidäänkö uusi kulu?",
+    "confirmMessage": "Kulu #{{id}} merkitään mitätöidyksi. Sen ALV ja sen luomat osakassijoitukset eivät enää ole mukana laskelmissa. Toimintoa ei voi perua.",
+    "reason": "Syy",
+    "defaultReason": "Kaksoiskappale kulusta {{ids}}"
+  },
+  "investment": {
+    "owner": "Sijoittaja",
+    "partner": "Osakas",
+    "joint": "Yhteinen (50/50)",
+    "selectPartner": "Valitse osakas…",
+    "jointHint": "Yhteinen sijoitus jaetaan tasan osakkaiden kesken.",
+    "noPartners": "Osakkaita ei ole määritetty, joten sijoitukset kirjataan yhteisiksi.",
+    "note": "Huomautus",
+    "notePlaceholder": "esim. käteistä kassaan vaihtorahaksi",
+    "submit": "Tallenna sijoitus",
+    "success": "Tallennettu: {{amount}}, sijoittaja {{who}} — {{category}}, {{date}}",
+    "infoTitle": "Sijoitusluokat",
+    "infoText": "Vain käsin lisättävät rivit. Yksikköostot ja osakkaan maksamat kulut luovat sijoitusrivinsä automaattisesti."
+  },
+  "investmentCategory": {
+    "UNITS": "Yksiköt",
+    "SPARE_PARTS": "Varaosat",
+    "TOOLS": "Työkalut",
+    "EXPENSES": "Kulut",
+    "CASH_INJECTED": "Pääomasijoitus (käteinen)"
+  },
+  "investmentCategoryHint": {
+    "UNITS": "liiketoimintaan ostetut skootterit, sähköpyörät tai mopot",
+    "SPARE_PARTS": "osakkaan omilla rahoilla ostetut varaosat",
+    "TOOLS": "korjaamon työkalut ja laitteet",
+    "EXPENSES": "osakkaan itse maksamat juoksevat kulut",
+    "CASH_INJECTED": "yrityksen tilille tai kassaan tuodut rahat"
+  },
+  "preview": {
+    "title": "Esikatselu",
+    "hint": "Lasketaan kirjoittaessasi, täsmälleen kuten tallennettu kirjaus.",
+    "netModeHint": "Veroton hinta syötetty — ALV lisätään päälle.",
+    "empty": "Anna summa nähdäksesi ALV-erittelyn.",
+    "netEntered": "Syötetty veroton hinta",
+    "grossBeforeDiscount": "Ennen alennusta",
+    "discount": "Alennus",
+    "noVatInvoice": "ei ALV-laskua",
+    "expenseTitle": "Vähennettävä ALV",
+    "expenseHint": "Tästä ostosta vähennettävä arvonlisävero.",
+    "expenseGross": "Maksettu summa",
+    "vatInPrice": "ALV hinnassa",
+    "reclaimable": "Vähennettävä ALV",
+    "costAfterReclaim": "Kustannus vähennyksen jälkeen"
+  },
+  "latest": {
+    "title": "Viimeisimmät kirjaukset",
+    "subtitle": "10 viimeisintä tulokirjausta.",
+    "emptyTitle": "Ei vielä kirjauksia",
+    "emptyHint": "Yllä tallentamasi tulot näkyvät tässä.",
+    "noVatInvoice": "Ei ALV-lask.",
+    "noVatInvoiceTitle": "ALV-laskua ei annettu — ALV:ton tulo"
+  },
+  "table": {
+    "type": "Tyyppi",
+    "gross": "Brutto"
+  }
+}

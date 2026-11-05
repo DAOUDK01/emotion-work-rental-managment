@@ -1,0 +1,128 @@
+{
+  "title": "Warranty claims",
+  "description": "Case files towards warranty and insurance companies — from opening to payout.",
+  "new": "New claim",
+  "searchPlaceholder": "Search case #, company or description",
+  "filters": {
+    "status": "Filter by status",
+    "allStatuses": "All statuses"
+  },
+  "status": {
+    "OPEN": "Open",
+    "SUBMITTED": "Submitted",
+    "APPROVED": "Approved",
+    "REJECTED": "Rejected",
+    "PAID": "Paid"
+  },
+  "customerType": {
+    "INDIVIDUAL": "Individual",
+    "BUSINESS": "Business"
+  },
+  "timeline": {
+    "label": "Claim progress: {{status}} (step {{step}} of {{steps}})",
+    "decision": "Decision"
+  },
+  "table": {
+    "caseNumber": "Case #",
+    "company": "Company",
+    "customer": "Customer",
+    "item": "Unit / product",
+    "claimed": "Claimed",
+    "approved": "Approved",
+    "status": "Status",
+    "dates": "Dates",
+    "opened": "Opened",
+    "submitted": "Submitted",
+    "decided": "Decided",
+    "documents_one": "{{count}} document",
+    "documents_other": "{{count}} documents"
+  },
+  "empty": {
+    "title": "No warranty claims yet",
+    "hint": "Open a claim when a unit or part fails under warranty, or when an insurance case starts.",
+    "filteredTitle": "No claims match",
+    "filteredHint": "Try another search term or status."
+  },
+  "actions": {
+    "view": "View claim {{caseNumber}}",
+    "edit": "Edit claim {{caseNumber}}",
+    "changeStatus": "Change status",
+    "changeStatusFor": "Change status of {{caseNumber}}"
+  },
+  "pagination": {
+    "label": "Claims pages",
+    "showing": "{{from}}–{{to}} of {{total}}",
+    "prev": "Previous",
+    "next": "Next",
+    "count_one": "{{count}} claim",
+    "count_other": "{{count}} claims"
+  },
+  "form": {
+    "createTitle": "New warranty claim",
+    "editTitle": "Edit claim {{caseNumber}}",
+    "company": "Warranty / insurance company",
+    "companyPlaceholder": "e.g. If Vahinkovakuutus, Segway Europe",
+    "customer": "Customer",
+    "customerSearch": "Search by name, email or Business ID",
+    "clearCustomer": "Remove customer",
+    "searching": "Searching…",
+    "customerSearchFailed": "Customer search failed — try again",
+    "noCustomers": "No customers found",
+    "unit": "Unit",
+    "noUnit": "No unit",
+    "product": "Product / part",
+    "noProduct": "No product",
+    "loadingOptions": "Loading…",
+    "optionsFailed": "The list could not be loaded — reopen the form to try again.",
+    "description": "Description",
+    "descriptionPlaceholder": "What failed, when, and what is being claimed",
+    "claimed": "Claimed amount (€)",
+    "submittedAt": "Submitted to the company on",
+    "submittedHint": "Leave empty until the claim has been sent.",
+    "saving": "Saving…",
+    "created": "Claim {{caseNumber}} created — you can attach documents now"
+  },
+  "validation": {
+    "companyRequired": "Enter the warranty or insurance company",
+    "descriptionRequired": "Describe the claim",
+    "tooLong": "Text is too long",
+    "amountInvalid": "Enter a valid amount, e.g. 120,50",
+    "dateInvalid": "Enter a valid date",
+    "approvedRequired": "Enter the approved amount",
+    "submittedRequired": "Enter the date the claim was submitted"
+  },
+  "statusDialog": {
+    "title": "Change status — {{caseNumber}}",
+    "current": "Current status",
+    "newStatus": "New status",
+    "approved": "Approved amount (€)",
+    "approvedHint": "The amount the company agreed to pay",
+    "decidedAt": "Decision date",
+    "decidedHint": "Leave empty to use today's date",
+    "submittedAt": "Submission date",
+    "submit": "Update status",
+    "saving": "Updating…",
+    "success": "{{caseNumber}} is now {{status}}",
+    "rejectedNote": "A rejected claim is closed without payout. You can reopen it later by choosing another status."
+  },
+  "detail": {
+    "title": "Claim details",
+    "progress": "Progress",
+    "fields": "Details",
+    "opened": "Opened",
+    "money": "Amounts",
+    "difference": "Approved vs. claimed",
+    "documents": "Documents",
+    "upload": "Upload document",
+    "uploading": "Uploading…",
+    "uploaded": "Document uploaded",
+    "fileTypes": "Images (JPEG, PNG, WebP, HEIC) or PDF, max 10 MB.",
+    "fileTooLarge": "The file is larger than 10 MB",
+    "noDocuments": "No documents yet. Attach the claim form, photos and the company's decision.",
+    "open": "Open {{name}}",
+    "deleteDoc": "Delete document {{name}}",
+    "deleteTitle": "Delete document?",
+    "deleteMessage": "{{name}} will be removed from this claim permanently. This cannot be undone.",
+    "deleted": "Document deleted"
+  }
+}

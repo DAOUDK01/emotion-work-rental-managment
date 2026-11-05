@@ -1,0 +1,90 @@
+{
+  "title": "ALV",
+  "subtitle": "Jakson arvonlisäveroasema — juuri se, minkä kirjanpitäjä ilmoittaa",
+  "loading": "Lasketaan ALV-asemaa…",
+  "export": {
+    "ready": "Vienti ladattu",
+    "failed": "Vientitiedostoa ei voitu luoda",
+    "preparing": "Valmistellaan…"
+  },
+  "cards": {
+    "collected": "Myynnin ALV",
+    "collectedSub": "myynti + vuokrat",
+    "reclaimable": "Vähennettävä ALV",
+    "reclaimableSub": "ostoista",
+    "payable": "Maksettava ALV",
+    "payableSub": "myynnin ALV − vähennettävä",
+    "refund": "Palautettava ALV",
+    "refundSub": "myynnin ALV − vähennettävä (negatiivinen = palautus)",
+    "nonVat": "Tulot ilman ALV:tä",
+    "nonVatSub": "käteinen, Revolut, PayPal…"
+  },
+  "note": {
+    "title": "Huomio kirjanpitäjälle"
+  },
+  "undated": {
+    "text_one": "{{count}} kululta puuttuu päivämäärä, joten se ei sisälly mihinkään jaksoon (brutto {{gross}}, vähennettävä ALV {{vat}}). Lisää päivämäärä Kulut-näkymässä, jotta kulu lasketaan mukaan.",
+    "text_other": "{{count}} kululta puuttuu päivämäärä, joten ne eivät sisälly mihinkään jaksoon (brutto {{gross}}, vähennettävä ALV {{vat}}). Lisää päivämäärät Kulut-näkymässä, jotta kulut lasketaan mukaan."
+  },
+  "empty": {
+    "title": "Jaksolla ei ole ALV-tapahtumia",
+    "hint": "Välille {{from}}–{{to}} ei ole päivätty tuloja eikä ostoja. Valitse toinen jakso."
+  },
+  "byModel": {
+    "title": "Toimintamalleittain",
+    "description": "Jakson tulot jaoteltuna ALV-käsittelyn mukaan",
+    "empty": "Jaksolla ei ole tuloja",
+    "emptyHint": "Jaksolle on päivätty vain ostoja.",
+    "model": "Toimintamalli",
+    "withVat": "ALV:llinen (brutto)",
+    "vat": "ALV",
+    "noVat": "Ilman ALV:tä"
+  },
+  "lines": {
+    "show": "Näytä",
+    "hide": "Piilota",
+    "showing": "Näytetään {{shown}} / {{total}} riviä",
+    "showAll": "Näytä kaikki {{total}} riviä",
+    "reviewTooltip": "Merkitty tarkistettavaksi — tarkista rivi ennen ilmoittamista"
+  },
+  "income": {
+    "title": "Tulorivit",
+    "summary_one": "{{count}} rivi · ALV {{vat}} · ilman ALV:tä {{nonVat}}",
+    "summary_other": "{{count}} riviä · ALV {{vat}} · ilman ALV:tä {{nonVat}}",
+    "empty": "Jaksolla ei ole tulorivejä",
+    "emptyHint": "Jaksolle päivätyt tulokirjaukset näkyvät tässä.",
+    "date": "Päivämäärä",
+    "model": "Toimintamalli",
+    "description": "Kuvaus",
+    "gross": "Brutto",
+    "vat": "ALV",
+    "flag": "ALV-lasku",
+    "vatFlag": "ALV",
+    "noVatFlag": "Ei ALV:tä",
+    "nonVatTotal": "ilman ALV:tä {{amount}}"
+  },
+  "purchases": {
+    "title": "Ostorivit",
+    "summary_one": "{{count}} rivi · brutto {{gross}} · vähennettävä ALV {{reclaimable}}",
+    "summary_other": "{{count}} riviä · brutto {{gross}} · vähennettävä ALV {{reclaimable}}",
+    "empty": "Jaksolla ei ole ostorivejä",
+    "emptyHint": "Jaksolle päivätyt kulut näkyvät tässä.",
+    "date": "Päivämäärä",
+    "vendor": "Myyjä",
+    "description": "Kuvaus",
+    "gross": "Brutto",
+    "receipt": "Kuitti",
+    "receiptYes": "Kelvollinen kuitti",
+    "receiptNo": "Ei kelvollista kuittia",
+    "businessPct": "Liiketoiminta-%",
+    "reclaimable": "Vähennettävä",
+    "paidBy": "maksaja {{name}}"
+  },
+  "tax": {
+    "single": "Yritysveroarvio: {{now}}",
+    "withNext": "Yritysveroarvio: {{now}} nyt, {{next}} {{date}} alkaen",
+    "onlyNext": "Yritysveroarvio: {{next}} {{date}} alkaen",
+    "hint": "voitosta maksettava yhteisövero, erillään arvonlisäverosta",
+    "unavailable": "Yritysverokantoja ei voitu ladata."
+  }
+}

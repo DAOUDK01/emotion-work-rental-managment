@@ -1,0 +1,143 @@
+{
+  "title": "Customers",
+  "description": "Individuals and business customers — balances, rentals, invoices and GDPR tools",
+  "actions": {
+    "new": "New customer"
+  },
+  "type": {
+    "INDIVIDUAL": "Individual",
+    "BUSINESS": "Business"
+  },
+  "language": {
+    "EN": "English",
+    "FI": "Finnish"
+  },
+  "filters": {
+    "searchPlaceholder": "Search name, email or Business ID…",
+    "type": "Customer type",
+    "allTypes": "All types",
+    "active": "Active",
+    "archived": "Archived",
+    "count": "Customers: {{formatted}}"
+  },
+  "table": {
+    "name": "Name",
+    "type": "Type",
+    "email": "Email",
+    "phone": "Phone",
+    "outstanding": "Outstanding",
+    "rentals": "Rentals",
+    "invoices": "Invoices",
+    "businessIdShort": "Business ID",
+    "open": "Open customer {{name}}"
+  },
+  "empty": {
+    "title": "No customers yet",
+    "hint": "Add your first customer to track their rentals, invoices and open balance.",
+    "filtered": "No customers match these filters",
+    "filteredHint": "Try another search term, type or archive filter."
+  },
+  "detail": {
+    "title": "Customer details",
+    "archived": "Archived",
+    "profile": "Profile",
+    "checkDigit": "Check digit mismatch",
+    "customerSince": "Customer since",
+    "outstanding": "Outstanding",
+    "outstandingHint": "Income entries still waiting for payment (invoiced or pending).",
+    "allSettled": "Nothing open — everything is paid."
+  },
+  "tabs": {
+    "rentals": "Rentals",
+    "invoices": "Invoices",
+    "entries": "Entries",
+    "lastTwenty": "Showing the latest 20 of each.",
+    "noRentals": "No rentals for this customer yet.",
+    "noInvoices": "No invoices for this customer yet.",
+    "noEntries": "No income entries for this customer yet."
+  },
+  "rentals": {
+    "start": "Start",
+    "unit": "Unit",
+    "period": "Period",
+    "amount": "Amount",
+    "recurring": "Monthly",
+    "openAll": "Open the rentals page"
+  },
+  "invoices": {
+    "number": "Number",
+    "issued": "Issued",
+    "due": "Due",
+    "total": "Total",
+    "paid": "Paid",
+    "open": "Open invoice {{number}}"
+  },
+  "invoiceStatus": {
+    "DRAFT": "Draft",
+    "SENT": "Sent",
+    "PARTIALLY_PAID": "Partially paid",
+    "PAID": "Paid",
+    "CANCELLED": "Cancelled",
+    "OVERDUE": "Overdue"
+  },
+  "entries": {
+    "model": "Business model",
+    "description": "Description",
+    "noVat": "no VAT invoice"
+  },
+  "form": {
+    "createTitle": "New customer",
+    "editTitle": "Edit customer",
+    "type": "Customer type",
+    "name": "Name",
+    "nameRequired": "Name is required",
+    "tooLong": "This is too long",
+    "businessId": "Business ID (Y-tunnus)",
+    "businessIdHint": "Format 1234567-8. Checked for business customers.",
+    "businessIdValid": "Valid Business ID",
+    "businessIdInvalid": "The check digit does not match — please double-check. It can still be saved.",
+    "businessIdSavedInvalid": "Saved, but the Business ID check digit does not match. Please verify it.",
+    "email": "Email",
+    "badEmail": "Enter a valid email address",
+    "phone": "Phone",
+    "adminsOnly": "(admins only)",
+    "phoneHint": "Personal data — only admins can see the number.",
+    "phoneStaffHint": "Personal data — once saved, only admins can see the number.",
+    "phoneHiddenHint": "A stored number is hidden from you. Leave empty to keep it, or type a new one to replace it.",
+    "phoneHiddenPlaceholder": "Hidden",
+    "address": "Street address",
+    "postalCode": "Postal code",
+    "city": "City",
+    "country": "Country",
+    "countryHint": "2-letter code, e.g. FI",
+    "badCountry": "Use a 2-letter country code, e.g. FI",
+    "language": "Language",
+    "languageHint": "Used for invoices and receipts"
+  },
+  "archive": {
+    "archive": "Archive",
+    "unarchive": "Restore",
+    "title": "Archive {{name}}?",
+    "message": "The customer is hidden from the active list. All rentals, invoices and entries stay unchanged, and you can restore the customer at any time.",
+    "archivedOk": "Customer archived",
+    "unarchivedOk": "Customer restored"
+  },
+  "gdpr": {
+    "menu": "GDPR",
+    "export": "Export data (JSON)",
+    "exportedOk": "Customer data exported",
+    "erase": "Erase personal data",
+    "eraseTitle": "Erase personal data of {{name}}?",
+    "eraseMessage": "This anonymises the customer under the GDPR right to erasure.",
+    "eraseRemoves": "Name, Business ID, email, phone, address and notes are removed. The customer becomes \"Erased customer #id\" and is archived.",
+    "eraseKeeps": "Financial rows (rentals, invoices, entries, payments) are kept for 6 years, as required by the Finnish Bookkeeping Act.",
+    "eraseIrreversible": "This cannot be undone. Export the data first if the customer asked for a copy.",
+    "typeToConfirm": "Type {{word}} to confirm",
+    "typeToConfirmHint": "Capital letters, exactly as shown.",
+    "typeToConfirmError": "Type {{word}} exactly to continue",
+    "eraseConfirm": "Erase personal data",
+    "erasedOk": "Personal data erased",
+    "hasOutstanding": "Cannot erase: the customer still has an outstanding balance or open invoices.",
+    "hasOutstandingDetail": "Cannot erase yet: {{amount}} is still outstanding ({{entries}} open entries, {{invoices}} unsettled invoices). Settle, void or cancel them first."
+  }
+}

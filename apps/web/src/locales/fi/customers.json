@@ -1,0 +1,143 @@
+{
+  "title": "Asiakkaat",
+  "description": "Yksityis- ja yritysasiakkaat — saatavat, vuokraukset, laskut ja tietosuojatyökalut",
+  "actions": {
+    "new": "Uusi asiakas"
+  },
+  "type": {
+    "INDIVIDUAL": "Yksityinen",
+    "BUSINESS": "Yritys"
+  },
+  "language": {
+    "EN": "Englanti",
+    "FI": "Suomi"
+  },
+  "filters": {
+    "searchPlaceholder": "Hae nimellä, sähköpostilla tai Y-tunnuksella…",
+    "type": "Asiakastyyppi",
+    "allTypes": "Kaikki tyypit",
+    "active": "Aktiiviset",
+    "archived": "Arkistoidut",
+    "count": "Asiakkaita: {{formatted}}"
+  },
+  "table": {
+    "name": "Nimi",
+    "type": "Tyyppi",
+    "email": "Sähköposti",
+    "phone": "Puhelin",
+    "outstanding": "Avoinna",
+    "rentals": "Vuokraukset",
+    "invoices": "Laskut",
+    "businessIdShort": "Y-tunnus",
+    "open": "Avaa asiakas {{name}}"
+  },
+  "empty": {
+    "title": "Ei vielä asiakkaita",
+    "hint": "Lisää ensimmäinen asiakas seurataksesi hänen vuokrauksiaan, laskujaan ja avointa saldoaan.",
+    "filtered": "Yksikään asiakas ei vastaa suodattimia",
+    "filteredHint": "Kokeile toista hakusanaa, tyyppiä tai arkistosuodatinta."
+  },
+  "detail": {
+    "title": "Asiakkaan tiedot",
+    "archived": "Arkistoitu",
+    "profile": "Perustiedot",
+    "checkDigit": "Tarkiste ei täsmää",
+    "customerSince": "Asiakkaana alkaen",
+    "outstanding": "Avoinna",
+    "outstandingHint": "Tulokirjaukset, jotka odottavat vielä maksua (laskutettu tai odottaa).",
+    "allSettled": "Ei avoimia — kaikki on maksettu."
+  },
+  "tabs": {
+    "rentals": "Vuokraukset",
+    "invoices": "Laskut",
+    "entries": "Kirjaukset",
+    "lastTwenty": "Näytetään kustakin 20 viimeisintä.",
+    "noRentals": "Asiakkaalla ei ole vielä vuokrauksia.",
+    "noInvoices": "Asiakkaalla ei ole vielä laskuja.",
+    "noEntries": "Asiakkaalla ei ole vielä tulokirjauksia."
+  },
+  "rentals": {
+    "start": "Alkaa",
+    "unit": "Laite",
+    "period": "Jakso",
+    "amount": "Summa",
+    "recurring": "Kuukausittain",
+    "openAll": "Avaa vuokraussivu"
+  },
+  "invoices": {
+    "number": "Numero",
+    "issued": "Päiväys",
+    "due": "Eräpäivä",
+    "total": "Yhteensä",
+    "paid": "Maksettu",
+    "open": "Avaa lasku {{number}}"
+  },
+  "invoiceStatus": {
+    "DRAFT": "Luonnos",
+    "SENT": "Lähetetty",
+    "PARTIALLY_PAID": "Osittain maksettu",
+    "PAID": "Maksettu",
+    "CANCELLED": "Hyvitetty",
+    "OVERDUE": "Erääntynyt"
+  },
+  "entries": {
+    "model": "Liiketoimintamalli",
+    "description": "Kuvaus",
+    "noVat": "ei ALV-laskua"
+  },
+  "form": {
+    "createTitle": "Uusi asiakas",
+    "editTitle": "Muokkaa asiakasta",
+    "type": "Asiakastyyppi",
+    "name": "Nimi",
+    "nameRequired": "Nimi on pakollinen",
+    "tooLong": "Teksti on liian pitkä",
+    "businessId": "Y-tunnus",
+    "businessIdHint": "Muoto 1234567-8. Tarkistetaan yritysasiakkailta.",
+    "businessIdValid": "Y-tunnus on kelvollinen",
+    "businessIdInvalid": "Tarkistusnumero ei täsmää — tarkista tunnus. Tallentaminen onnistuu silti.",
+    "businessIdSavedInvalid": "Tallennettu, mutta Y-tunnuksen tarkistusnumero ei täsmää. Tarkista tunnus.",
+    "email": "Sähköposti",
+    "badEmail": "Anna kelvollinen sähköpostiosoite",
+    "phone": "Puhelin",
+    "adminsOnly": "(vain ylläpitäjät)",
+    "phoneHint": "Henkilötieto — numeron näkevät vain ylläpitäjät.",
+    "phoneStaffHint": "Henkilötieto — tallennuksen jälkeen numeron näkevät vain ylläpitäjät.",
+    "phoneHiddenHint": "Tallennettu numero on piilotettu sinulta. Jätä tyhjäksi säilyttääksesi sen tai kirjoita uusi korvataksesi sen.",
+    "phoneHiddenPlaceholder": "Piilotettu",
+    "address": "Katuosoite",
+    "postalCode": "Postinumero",
+    "city": "Postitoimipaikka",
+    "country": "Maa",
+    "countryHint": "Kaksikirjaiminen koodi, esim. FI",
+    "badCountry": "Käytä kaksikirjaimista maakoodia, esim. FI",
+    "language": "Kieli",
+    "languageHint": "Käytetään laskuissa ja kuiteissa"
+  },
+  "archive": {
+    "archive": "Arkistoi",
+    "unarchive": "Palauta",
+    "title": "Arkistoidaanko {{name}}?",
+    "message": "Asiakas piilotetaan aktiivisten listalta. Vuokraukset, laskut ja kirjaukset säilyvät ennallaan, ja asiakkaan voi palauttaa milloin tahansa.",
+    "archivedOk": "Asiakas arkistoitu",
+    "unarchivedOk": "Asiakas palautettu"
+  },
+  "gdpr": {
+    "menu": "Tietosuoja",
+    "export": "Vie tiedot (JSON)",
+    "exportedOk": "Asiakkaan tiedot viety",
+    "erase": "Poista henkilötiedot",
+    "eraseTitle": "Poistetaanko asiakkaan {{name}} henkilötiedot?",
+    "eraseMessage": "Asiakas anonymisoidaan tietosuoja-asetuksen mukaisen poisto-oikeuden perusteella.",
+    "eraseRemoves": "Nimi, Y-tunnus, sähköposti, puhelin, osoite ja muistiinpanot poistetaan. Asiakkaasta tulee \"Erased customer #id\", ja se arkistoidaan.",
+    "eraseKeeps": "Taloustiedot (vuokraukset, laskut, kirjaukset, maksut) säilytetään 6 vuotta kirjanpitolain vaatimusten mukaisesti.",
+    "eraseIrreversible": "Toimintoa ei voi perua. Vie tiedot ensin, jos asiakas on pyytänyt niistä kopion.",
+    "typeToConfirm": "Vahvista kirjoittamalla {{word}}",
+    "typeToConfirmHint": "Isoilla kirjaimilla täsmälleen kuten yllä.",
+    "typeToConfirmError": "Kirjoita {{word}} täsmälleen jatkaaksesi",
+    "eraseConfirm": "Poista henkilötiedot",
+    "erasedOk": "Henkilötiedot poistettu",
+    "hasOutstanding": "Poisto ei onnistu: asiakkaalla on vielä avoimia saatavia tai maksamattomia laskuja.",
+    "hasOutstandingDetail": "Poisto ei vielä onnistu: {{amount}} on yhä avoinna ({{entries}} avointa kirjausta, {{invoices}} maksamatonta laskua). Kuittaa, mitätöi tai hyvitä ne ensin."
+  }
+}

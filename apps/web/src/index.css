@@ -1,0 +1,82 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --background: 210 20% 98%;
+    --foreground: 215 50% 12%;
+    --card: 0 0% 100%;
+    --card-foreground: 215 50% 12%;
+    --primary: 215 73% 16%; /* navy #0b2545 */
+    --primary-foreground: 0 0% 100%;
+    --secondary: 210 16% 93%;
+    --secondary-foreground: 215 50% 15%;
+    --muted: 210 16% 94%;
+    --muted-foreground: 215 12% 42%;
+    --accent: 172 58% 39%; /* teal */
+    --accent-foreground: 0 0% 100%;
+    --destructive: 0 68% 47%;
+    --destructive-foreground: 0 0% 100%;
+    --border: 214 15% 88%;
+    --input: 214 15% 84%;
+    --ring: 215 73% 30%;
+  }
+  .dark {
+    --background: 218 32% 10%;
+    --foreground: 210 20% 92%;
+    --card: 218 28% 14%;
+    --card-foreground: 210 20% 92%;
+    --primary: 210 70% 60%;
+    --primary-foreground: 218 40% 10%;
+    --secondary: 218 20% 20%;
+    --secondary-foreground: 210 20% 88%;
+    --muted: 218 20% 18%;
+    --muted-foreground: 215 12% 62%;
+    --accent: 172 50% 42%;
+    --accent-foreground: 0 0% 100%;
+    --destructive: 0 62% 52%;
+    --destructive-foreground: 0 0% 100%;
+    --border: 218 18% 24%;
+    --input: 218 18% 28%;
+    --ring: 210 70% 60%;
+  }
+  html,
+  body,
+  #root {
+    height: 100%;
+  }
+  body {
+    @apply bg-background text-foreground antialiased;
+    font-family:
+      'Inter',
+      system-ui,
+      -apple-system,
+      'Segoe UI',
+      Roboto,
+      sans-serif;
+  }
+  * {
+    @apply border-border;
+  }
+}
+
+@layer utilities {
+  .tabular-nums {
+    font-variant-numeric: tabular-nums;
+  }
+  .scrollbar-thin::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+  }
+  .scrollbar-thin::-webkit-scrollbar-thumb {
+    @apply rounded bg-muted-foreground/30;
+  }
+}
+
+/* POS + receipts print styling */
+@media print {
+  .no-print {
+    display: none !important;
+  }
+}

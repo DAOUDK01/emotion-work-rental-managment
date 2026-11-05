@@ -1,0 +1,73 @@
+{
+  "title": "Dashboard",
+  "filters": {
+    "allModels": "All models",
+    "unit": "Unit",
+    "allUnits": "All units",
+    "segment": "Customer segment",
+    "allSegments": "All segments",
+    "individual": "Individual",
+    "business": "Business",
+    "receivedBy": "Received by",
+    "anyReceiver": "Anyone"
+  },
+  "kpi": {
+    "totalSales": "Total sales",
+    "inclVat": "incl. VAT",
+    "expenses": "Expenses",
+    "allCategories": "all categories",
+    "netProfit": "Net profit",
+    "margin": "margin",
+    "vatPayable": "VAT payable",
+    "collectedMinusReclaimable": "collected minus reclaimable",
+    "discounts": "Discounts given",
+    "promotions": "promotions",
+    "unpaid": "Unpaid",
+    "customers": "customers",
+    "received": "Received",
+    "outstanding": "Outstanding",
+    "orders": "Orders",
+    "avgPerOrder": "avg / order",
+    "rentalPayback": "Rental payback on units",
+    "taxEstimate": "Tax estimate",
+    "afterTax": "after tax"
+  },
+  "charts": {
+    "revenueByModel": "Revenue by model",
+    "longestBar": "Longest bar = where to invest more",
+    "profitByModel": "Profit and loss by model",
+    "greenRed": "Green = profit, red = loss",
+    "growth": "Growth by time",
+    "compareModels": "Compare models",
+    "oneModel": "One model",
+    "monthlyTrend": "Monthly revenue trend",
+    "receivedLabel": "Received",
+    "outstandingLabel": "Outstanding",
+    "expensesByType": "Expenses by type",
+    "revenueByReceiver": "Revenue by received-by",
+    "rentalByCategory": "Rental revenue by product category",
+    "weekly": "Weekly",
+    "monthly": "Monthly",
+    "yearly": "Yearly",
+    "last": "Last",
+    "weeks": "weeks",
+    "months": "months",
+    "years": "years"
+  },
+  "units": {
+    "title": "Unit performance — rental revenue vs. purchase cost",
+    "unit": "Unit",
+    "category": "Category",
+    "status": "Status",
+    "orders": "Rental orders",
+    "revenue": "Rental revenue",
+    "cost": "Purchase cost",
+    "diff": "Revenue − cost",
+    "payback": "Payback",
+    "paidBack": "Paid back"
+  },
+  "bridge": { "title": "Profit bridge" },
+  "alerts": {
+    "cashHolding": "{{name}} is holding {{amount}} (oldest receipt {{date}}) — hand over to the company account."
+  }
+}

@@ -1,0 +1,142 @@
+{
+  "title": "WhatsApp inbox",
+  "description": "Every message sent to the company WhatsApp number — what the bot saved and what it replied.",
+  "actions": {
+    "simulate": "Simulate message",
+    "reject": "Reject",
+    "reparse": "Re-parse",
+    "showMore": "Show more",
+    "showLess": "Show less"
+  },
+  "filters": {
+    "status": "Status",
+    "clear": "Clear filters"
+  },
+  "status": {
+    "RECEIVED": "Command",
+    "SAVED": "Saved",
+    "ERROR": "Error",
+    "REJECTED": "Rejected",
+    "UNDONE": "Undone"
+  },
+  "table": {
+    "receivedAt": "Received",
+    "sender": "Sender",
+    "message": "Message",
+    "parsed": "Saved as",
+    "reply": "Bot reply",
+    "noReply": "No reply",
+    "undoneAt": "Undone {{time}}",
+    "showing": "Showing {{from}}–{{to}} of {{total}}"
+  },
+  "summary": {
+    "command": "HELP / UNDO command — nothing saved",
+    "nothing": "Nothing saved",
+    "unit": "Unit {{code}}",
+    "receivedBy": "received by {{name}}",
+    "paidBy": "paid by {{name}}",
+    "pending": "payment pending",
+    "vat": "VAT invoice",
+    "noVat": "no VAT invoice",
+    "voided": "Voided",
+    "entry": "Entry #{{id}}",
+    "expense": "Expense #{{id}}",
+    "openEntriesHint": "Open Add entry — the entry is listed under the latest entries",
+    "openExpensesHint": "Open the Expenses list"
+  },
+  "models": {
+    "RENTAL": "Rental",
+    "REPAIR": "Repair",
+    "SPARE_PARTS": "Spare parts",
+    "UNIT_SALES": "Unit sale",
+    "CONTRACT": "Contract work"
+  },
+  "reject": {
+    "tooltip": "Mark as rejected and void the entry or expense it created",
+    "title": "Reject WhatsApp message",
+    "messageLinked": "Rejecting voids the entry or expense this message created (and any partner investment derived from it). The voided row stays in the books for the audit trail; totals no longer count it. The sender is not notified.",
+    "messageNoLink": "This message has no active entry or expense, so nothing will be voided — it is only marked as rejected. The sender is not notified.",
+    "linkedEntry": "Will be voided: entry #{{id}} — {{model}} {{amount}}",
+    "linkedExpense": "Will be voided: expense #{{id}} — {{vendor}} {{amount}}",
+    "reason": "Reason",
+    "reasonHint": "Saved in the audit log and shown on the message.",
+    "reasonPlaceholder": "e.g. Wrong amount, re-entered manually",
+    "confirm": "Reject and void",
+    "rejecting": "Rejecting…",
+    "success": "Message rejected",
+    "successVoided": "Message rejected — the linked record was voided"
+  },
+  "reparse": {
+    "tooltip": "Run this message through the parser again",
+    "title": "Re-parse message",
+    "message": "The message runs through the same pipeline as a new WhatsApp message. If it parses, a new entry or expense is saved and the bot sends its reply to the sender again.",
+    "lastError": "Last error",
+    "allowListNote": "The sender must still be on the allow-list (Settings → WhatsApp), otherwise the message is rejected again.",
+    "confirm": "Re-parse",
+    "working": "Re-parsing…",
+    "saved": "Re-parsed and saved",
+    "replied": "Re-parsed — the bot replied, nothing was saved",
+    "notSaved": "Re-parse did not save anything ({{status}})"
+  },
+  "simulate": {
+    "title": "Simulate a WhatsApp message",
+    "intro": "Runs the exact same pipeline as a real message from Meta — entries are really saved. Use it to test the format before Meta is connected. The reply is shown here instead of being sent.",
+    "from": "From phone number",
+    "fromHint": "Must be on the allow-list in Settings → WhatsApp, in international format.",
+    "text": "Message",
+    "textHint": "First line is the entry; any further lines are saved as notes. Ctrl+Enter sends.",
+    "placeholder": "RENT | EE2-251001 | 45 | cash | Salman\nNotes go on the next line",
+    "examples": "Insert an example",
+    "useExample": "Put this example in the message box",
+    "send": "Send",
+    "sending": "Sending…",
+    "replyTitle": "Bot reply",
+    "noReply": "The bot did not reply to this message.",
+    "savedToast": "Simulated message saved",
+    "notAllowed": "This number is not on the allow-list. Add it in"
+  },
+  "setup": {
+    "title": "Setup checklist",
+    "intro": "No messages have arrived yet. To connect the company WhatsApp number, follow the full guide in",
+    "stepAccount": "Create and verify a Meta Business account and a WhatsApp Business account with a dedicated number (not used on a personal WhatsApp).",
+    "stepWebhook": "In the Meta developer console, set this webhook URL with the verify token from the server's .env and subscribe to \"messages\":",
+    "webhookLabel": "Webhook URL",
+    "copy": "Copy",
+    "copied": "Webhook URL copied",
+    "copyFailed": "Could not copy — select the URL and copy it manually.",
+    "stepEnv": "Put the access token, app secret and phone number ID into the server's .env and restart the server.",
+    "stepAllowList": "Add the partners' phone numbers to the allow-list in",
+    "settingsLink": "Settings → WhatsApp",
+    "stepTest": "Test the whole flow right now, without Meta:"
+  },
+  "help": {
+    "title": "Message format",
+    "intro": "One line, fields separated by | (vertical bar). Keywords are not case-sensitive.",
+    "formats": {
+      "rent": "RENT | unit | amount | payment | received by",
+      "repair": "REPAIR | amount | labour 50 parts 30 | payment | received by",
+      "part": "PART | item name | amount | payment | received by",
+      "sale": "SALE | unit | amount | payment | received by",
+      "exp": "EXP | vendor | amount | paid by | category"
+    },
+    "payment": "Payment: cash, bank, card, mobilepay, revolut, wise, paypal",
+    "people": "Received by / paid by: Ahmed, Salman, Company Account, Cash",
+    "discount": "Discount: add \"DISC 5\" after the amount. VAT / NOVAT overrides the VAT invoice flag.",
+    "notes": "Write notes on the next line.",
+    "undo": "UNDO cancels the sender's last entry (within 10 minutes).",
+    "sendHelp": "Sending HELP to the number replies with this list.",
+    "examples": "Examples"
+  },
+  "empty": {
+    "title": "No WhatsApp messages yet",
+    "hint": "Messages appear here as soon as the partners write to the company number. You can try it now with a simulated message.",
+    "filteredTitle": "No messages match these filters",
+    "filteredHint": "Choose another status or date range, or clear the filters."
+  },
+  "validation": {
+    "reasonRequired": "Give a reason for rejecting",
+    "phone": "Use an international phone number like +358401234567",
+    "textRequired": "Write a message",
+    "textTooLong": "The message is too long (max 4096 characters)"
+  }
+}

@@ -1,0 +1,133 @@
+{
+  "title": "Yksiköt",
+  "description": "Skootterit, sähköpyörät ja mopot — hankintahinta, tuotot ja takaisinmaksu yksiköittäin",
+  "view": {
+    "list": "Lista",
+    "compare": "Vertaa tyyppejä"
+  },
+  "kpi": {
+    "fleet": "Kaluston koko",
+    "invested": "Investoitu yhteensä",
+    "allUnits": "aktiivisten yksiköiden hankintahinta",
+    "earned": "Tuotot yhteensä",
+    "netOfVat": "ilman ALV:tä",
+    "payback": "Kaluston takaisinmaksu",
+    "earnedVsCost": "tuotot suhteessa hankintahintaan"
+  },
+  "status": {
+    "AVAILABLE": "Vapaana",
+    "ON_RENT": "Vuokralla",
+    "WAITING_PARTS": "Odottaa osia",
+    "IN_REPAIR": "Korjattavana",
+    "SOLD": "Myyty",
+    "DISPOSED": "Poistettu käytöstä"
+  },
+  "category": {
+    "E_SCOOTER": "Sähköskootteri",
+    "E_BIKE": "Sähköpyörä",
+    "MOPED": "Mopo"
+  },
+  "filters": {
+    "searchPlaceholder": "Hae tunnuksella, merkillä, mallilla, myyjällä…",
+    "status": "Tila",
+    "allStatuses": "Kaikki tilat",
+    "allCategories": "Kaikki tyypit",
+    "includeInactive": "Näytä arkistoidut",
+    "needsReviewOnly": "Vain tarkistettavat"
+  },
+  "table": {
+    "code": "Yksikön tunnus",
+    "brand": "Merkki / malli",
+    "category": "Tyyppi",
+    "owner": "Omistaja",
+    "cost": "Hankintahinta",
+    "earned": "Tuotot",
+    "payback": "Takaisinmaksu",
+    "paidBack": "Maksanut itsensä",
+    "saleResult": "Myyntitulos"
+  },
+  "actions": {
+    "addUnit": "Lisää yksikkö",
+    "sell": "Myy",
+    "statusChanged": "Tila päivitetty"
+  },
+  "empty": {
+    "title": "Ei vielä yksiköitä",
+    "hint": "Rekisteröi ensimmäinen skootteri, sähköpyörä tai mopo, niin sen takaisinmaksua seurataan.",
+    "filtered": "Suodattimia vastaavia yksiköitä ei löytynyt"
+  },
+  "detail": {
+    "title": "Yksikön tiedot",
+    "archived": "Arkistoitu",
+    "fields": "Tiedot",
+    "legacyName": "Vanha nimi",
+    "soldFor": "Myyntihinta",
+    "soldDate": "Myyntipäivä",
+    "result": "Elinkaaren tulos",
+    "partsUsed": "Käytetyt varaosat",
+    "remaining": "jäljellä",
+    "lifetime": "Elinkaaren tulos (tuotot + myynti − hankinta − osat)",
+    "lastEntries": "Viimeisimmät kirjaukset",
+    "noEntries": "Yksiköllä ei ole vielä tulokirjauksia."
+  },
+  "photos": {
+    "title": "Kuvat ja asiakirjat",
+    "add": "Lisää kuva",
+    "uploading": "Ladataan…",
+    "uploaded": "Tiedosto ladattu",
+    "empty": "Ei vielä kuvia."
+  },
+  "form": {
+    "createTitle": "Lisää yksikkö",
+    "editTitle": "Muokkaa yksikköä",
+    "brand": "Merkki",
+    "brandPlaceholder": "esim. Ego Evo 2",
+    "brandRequired": "Merkki on pakollinen",
+    "modelName": "Mallin nimi",
+    "inclusions": "Mukana tulevat varusteet",
+    "inclusionsHint": "esim. laturi, lukko, kypärä",
+    "purchaseDate": "Ostopäivä",
+    "codePreview": "Muodostaa yksikön tunnuksen: {{code}}",
+    "seller": "Myyjä",
+    "purchasePrice": "Ostohinta (€)",
+    "owner": "Omistaja",
+    "ownerHint": "Osakas, joka omistaa yksikön",
+    "paidByHint": "Osakkaan maksama = kirjataan osakkaan sijoitukseksi",
+    "badAmount": "Anna kelvollinen summa, esim. 450 tai 450,50",
+    "advancedToggle": "Lisäasetus: aseta yksikön tunnus käsin",
+    "codeOverride": "Tunnus käsin",
+    "codeOverrideHint": "Korvaa muodostetun tunnuksen. Kirjaimia, numeroita, . _ - (oltava yksilöllinen).",
+    "badCode": "2–40 merkkiä: kirjaimia, numeroita, . _ -"
+  },
+  "sell": {
+    "title": "Myy yksikkö {{code}}",
+    "price": "Myyntihinta (€)",
+    "priceRequired": "Myyntihinta on pakollinen",
+    "dateRequired": "Myyntipäivä on pakollinen",
+    "buyer": "Ostaja",
+    "buyerPlaceholder": "Hae asiakasta tai kirjoita nimi",
+    "buyerHint": "Valitse olemassa oleva asiakas tai kirjoita ostajan nimi",
+    "linkedCustomer": "Linkitetty asiakasrekisteriin",
+    "receiverRequired": "Valitse, kuka vastaanotti rahat",
+    "confirm": "Kirjaa myynti",
+    "soldOk": "Yksikkö {{code}} myyty",
+    "profit": "voitto",
+    "loss": "tappio",
+    "noUnit": "Yksikköä ei ole valittu"
+  },
+  "void": {
+    "title": "Mitätöidäänkö yksikkö {{code}}?",
+    "message": "Yksikkö piilotetaan aktiivisesta kalustosta. Sen taloushistoria säilyy ja toimenpide kirjataan lokiin.",
+    "reason": "Syy",
+    "reasonPlaceholder": "esim. kaksoiskirjaus, varastettu, poistettu kirjanpidosta",
+    "reasonRequired": "Anna syy"
+  },
+  "compare": {
+    "chartTitle": "Tuotot yksikkötyypeittäin",
+    "chartHint": "Aktiivisten yksiköiden nettotuotot — pisin palkki tuottaa eniten",
+    "tableTitle": "Yksikkötyyppien vertailu",
+    "units": "Yksiköitä",
+    "emptyTitle": "Ei vielä vertailtavaa",
+    "emptyHint": "Lisää yksiköitä ostohintoineen vertaillaksesi skoottereita, sähköpyöriä ja mopoja."
+  }
+}
