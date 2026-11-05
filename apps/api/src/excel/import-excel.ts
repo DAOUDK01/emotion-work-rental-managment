@@ -14,14 +14,13 @@
  *  - After import, the dashboard reproduces the Excel Calc sheet exactly
  *    (enforced by test/import-reconciliation.test.ts).
  *
- * CLI: pnpm import:excel <file.xlsx>
+ * CLI: pnpm import:excel <file.xlsx> (entry point in cli.ts)
  */
 import crypto from 'node:crypto';
 import fs from 'node:fs';
 import path from 'node:path';
-import { fileURLToPath } from 'node:url';
 import ExcelJS from 'exceljs';
-import { type Prisma, PrismaClient } from '@prisma/client';
+import type { Prisma, PrismaClient } from '@prisma/client';
 import { normalizeHolderName, parseAmountToCents, parseFlexibleDate } from '@emotionfix/shared';
 
 export interface ImportIssue {
@@ -659,27 +658,4 @@ async function importInto(
   });
 
   return { batchId: batch.id, summary, issues };
-}
-
-// ---- CLI entry: pnpm import:excel <file> ----
-const isCli = process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.meta.url);
-if (isCli) {
-  const file = process.argv[2];
-  if (!file) {
-    console.error('Usage: pnpm import:excel <path-to-workbook.xlsx>');
-    process.exit(1);
-  }
-  const prisma = new PrismaClient();
-  runExcelImport(prisma, path.resolve(file))
-    .then((result) => {
-      console.log('Import complete. Batch', result.batchId);
-      console.log(JSON.stringify(result.summary, null, 2));
-      const reviews = result.issues.filter((i) => i.severity !== 'info');
-      console.log(`${reviews.length} rows need review — open Settings → Import report in the app.`);
-    })
-    .catch((err) => {
-      console.error('Import failed:', err.message ?? err);
-      process.exitCode = 1;
-    })
-    .finally(() => void prisma.$disconnect());
 }

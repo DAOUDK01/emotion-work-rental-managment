@@ -14,7 +14,7 @@
     "db:generate": "prisma generate",
     "db:seed": "tsx prisma/seed.ts",
     "seed:demo": "tsx prisma/demo-seed.ts",
-    "import:excel": "tsx src/excel/import-excel.ts"
+    "import:excel": "tsx src/excel/cli.ts"
   },
   "prisma": {
     "seed": "tsx prisma/seed.ts"
