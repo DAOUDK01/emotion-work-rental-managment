@@ -28,20 +28,31 @@ test.describe('dashboard', () => {
     await expect(page.getByText(/Revenue by model/i)).toBeVisible();
     await expect(page.getByText(/Profit and loss by model/i)).toBeVisible();
     await expect(page.getByText(/Growth by time/i)).toBeVisible();
-    // unit performance table from demo data
+    // extra cards/charts and the unit performance table open on demand
+    await expect(page.getByText(/Unit performance/i)).toHaveCount(0);
+    await page.getByRole('button', { name: /show more details/i }).click();
     await expect(page.getByText(/Unit performance/i)).toBeVisible();
   });
 
   test('period and model filters update the view', async ({ page }) => {
     await login(page);
     await page.getByRole('tab', { name: /^Year$/ }).click();
-    await expect(page.getByRole('tab', { name: /^Year$/ })).toHaveAttribute('aria-selected', 'true');
+    await expect(page.getByRole('tab', { name: /^Year$/ })).toHaveAttribute(
+      'aria-selected',
+      'true',
+    );
     // pick the Rental model filter chip
     await page.getByRole('tab', { name: /^Rental$/ }).click();
-    await expect(page.getByRole('tab', { name: /^Rental$/ })).toHaveAttribute('aria-selected', 'true');
+    await expect(page.getByRole('tab', { name: /^Rental$/ })).toHaveAttribute(
+      'aria-selected',
+      'true',
+    );
     // growth granularity switch works
     await page.getByRole('tab', { name: /^Monthly$/ }).click();
-    await expect(page.getByRole('tab', { name: /^Monthly$/ })).toHaveAttribute('aria-selected', 'true');
+    await expect(page.getByRole('tab', { name: /^Monthly$/ })).toHaveAttribute(
+      'aria-selected',
+      'true',
+    );
   });
 
   test('language switch flips the UI to Finnish and back', async ({ page }) => {

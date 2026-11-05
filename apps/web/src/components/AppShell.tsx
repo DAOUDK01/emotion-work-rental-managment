@@ -20,7 +20,6 @@ import {
   PlusCircle,
   Receipt,
   Settings,
-  ShieldCheck,
   ShoppingCart,
   Sun,
   Users,
@@ -55,7 +54,8 @@ const NAV: NavItem[] = [
   { to: '/cash', icon: Wallet, key: 'nav.cash', roles: ['ADMIN', 'ACCOUNTANT'] },
   { to: '/reports', icon: ChartColumnBig, key: 'nav.reports' },
   { to: '/whatsapp', icon: MessageSquareText, key: 'nav.whatsapp', roles: ['ADMIN'] },
-  { to: '/claims', icon: ShieldCheck, key: 'nav.claims' },
+  // Warranty claims (spec "phase 2") is left out of the menu on purpose to keep it simple;
+  // the /claims page still works if opened directly.
   { to: '/contracts', icon: Wrench, key: 'nav.contracts', roles: ['ADMIN', 'ACCOUNTANT'] },
   { to: '/settings', icon: Settings, key: 'nav.settings', roles: ['ADMIN'] },
 ];
@@ -141,7 +141,12 @@ export function AppShell() {
           <aside className="absolute inset-y-0 left-0 flex w-64 flex-col border-r bg-card shadow-xl">
             <div className="flex items-center justify-between border-b px-4 py-3">
               <span className="text-sm font-bold">{companyName}</span>
-              <Button variant="ghost" size="icon" onClick={() => setMobileOpen(false)} aria-label="Close menu">
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={() => setMobileOpen(false)}
+                aria-label="Close menu"
+              >
                 <X className="h-4 w-4" />
               </Button>
             </div>
@@ -177,7 +182,9 @@ export function AppShell() {
             </Button>
             <div className="mx-1 hidden text-right sm:block">
               <div className="text-xs font-semibold leading-tight">{user?.name}</div>
-              <div className="text-2xs text-muted-foreground">{t(`role.${user?.role ?? 'STAFF'}`)}</div>
+              <div className="text-2xs text-muted-foreground">
+                {t(`role.${user?.role ?? 'STAFF'}`)}
+              </div>
             </div>
             <Button
               variant="ghost"

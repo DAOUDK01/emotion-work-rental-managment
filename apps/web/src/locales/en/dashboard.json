@@ -9,7 +9,13 @@
     "individual": "Individual",
     "business": "Business",
     "receivedBy": "Received by",
-    "anyReceiver": "Anyone"
+    "anyReceiver": "Anyone",
+    "more": "More filters",
+    "fewer": "Fewer filters"
+  },
+  "details": {
+    "show": "Show more details",
+    "hide": "Hide details"
   },
   "kpi": {
     "totalSales": "Total sales",

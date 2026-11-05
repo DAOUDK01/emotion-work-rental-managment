@@ -9,7 +9,13 @@
     "individual": "Yksityinen",
     "business": "Yritys",
     "receivedBy": "Vastaanottaja",
-    "anyReceiver": "Kuka tahansa"
+    "anyReceiver": "Kuka tahansa",
+    "more": "Lisää suodattimia",
+    "fewer": "Vähemmän suodattimia"
+  },
+  "details": {
+    "show": "Näytä lisätiedot",
+    "hide": "Piilota lisätiedot"
   },
   "kpi": {
     "totalSales": "Kokonaismyynti",
