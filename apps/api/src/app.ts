@@ -37,6 +37,7 @@ import { attachmentsRouter } from './modules/attachments/router.js';
 import { auditRouter } from './modules/audit/router.js';
 import { importRouter } from './modules/importer/router.js';
 import { gdprRouter } from './modules/gdpr/router.js';
+import { publicPrivacyPage } from './modules/gdpr/public-page.js';
 
 export function createApp() {
   const app = express();
@@ -72,6 +73,8 @@ export function createApp() {
 
   const api = express.Router();
   api.get('/health', (_req, res) => res.json({ ok: true, time: new Date().toISOString() }));
+  // public privacy policy (Meta needs a public URL to publish the WhatsApp app)
+  api.get('/privacy', publicPrivacyPage);
 
   api.use(attachUser);
   api.use(csrfProtect);
