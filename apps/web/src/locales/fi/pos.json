@@ -35,7 +35,7 @@
     "createAndAdd": "Luo ja lisää koriin",
     "created": "Tuote luotu",
     "name": "Tuotteen nimi",
-    "price": "Hinta sis. ALV (€)",
+    "price": "Hinta veroton (€)",
     "trackStock": "Seuraa tämän tuotteen varastosaldoa"
   },
   "cart": {
@@ -73,7 +73,9 @@
     "discounts": "Alennukset",
     "cartDiscountReason": "Korialennus: {{reason}}",
     "vatIncluded": "Sisältää ALV:n",
-    "total": "YHTEENSÄ"
+    "total": "YHTEENSÄ",
+    "subtotalExclVat": "Välisumma (veroton)",
+    "vatAdded": "+ ALV"
   },
   "discount": {
     "lineTitle": "Rivialennus",
@@ -99,12 +101,15 @@
     "rate": "Tuntihinta (€)",
     "computed": "Summa",
     "addToCart": "Lisää koriin",
-    "added": "Rivi lisätty"
+    "added": "Rivi lisätty",
+    "rateExclVat": "Tuntihinta veroton (€)",
+    "amountExclVat": "Summa veroton (€)"
   },
   "freeLine": {
     "title": "Lisää vapaatekstirivi",
     "qty": "Määrä",
-    "unitPrice": "Yksikköhinta sis. ALV (€)"
+    "unitPrice": "Yksikköhinta sis. ALV (€)",
+    "unitPriceExclVat": "Yksikköhinta veroton (€)"
   },
   "details": {
     "title": "Asiakas ja myynnin tiedot",

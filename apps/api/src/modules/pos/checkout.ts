@@ -1,5 +1,5 @@
 import type { Prisma } from '@prisma/client';
-import { incomeVat, roundHalfAwayFromZero, splitGross, todayInHelsinki } from '@emotionfix/shared';
+import { addVatToNet, incomeVat, roundHalfAwayFromZero, splitGross, todayInHelsinki } from '@emotionfix/shared';
 import { nextNumber, prisma } from '../../db.js';
 import { currentUserId } from '../../context.js';
 import { AppError, badRequest, conflict, notFound } from '../../errors.js';
@@ -8,6 +8,7 @@ import { createEntry, defaultVatInvoice } from '../../services/entries.js';
 import type { CompleteSaleBody, RefundBody } from './schemas.js';
 import { dominantVatRate, qtyToHundredths } from './totals.js';
 import { assertDiscountCap, effectiveSaleTotals, toDbDate, toIsoDate } from './service.js';
+import { lineBasisCents } from './totals.js';
 
 /**
  * Completion and refunds — the two moments a POS sale touches money and stock.
@@ -67,10 +68,7 @@ export async function completeSale(saleId: number, body: CompleteSaleBody): Prom
     if (sale.status !== 'PARKED') throw conflict('ALREADY_COMPLETED', 'The sale is already completed');
     if (sale.lines.length === 0) throw badRequest('NO_LINES', 'The sale has no lines');
 
-    const totals = effectiveSaleTotals(
-      sale.lines.map((l) => ({ lineGrossCents: l.lineGrossCents, vatRateBp: l.vatRateBp })),
-      sale.cartDiscountCents,
-    );
+    const totals = effectiveSaleTotals(sale.lines, sale.cartDiscountCents, sale.pricesExclVat);
     const got = body.payments.reduce((s, p) => s + p.amountCents - (p.changeCents ?? 0), 0);
     if (got !== totals.totalGrossCents) {
       throw badRequest('PAYMENT_MISMATCH', 'Payments minus change must equal the sale total', {
@@ -79,7 +77,10 @@ export async function completeSale(saleId: number, body: CompleteSaleBody): Prom
       });
     }
 
-    const baseSum = sale.lines.reduce((s, l) => s + l.lineGrossCents + l.discountCents, 0);
+    const baseSum = sale.lines.reduce(
+      (s, l) => s + lineBasisCents(l, sale.pricesExclVat) + l.discountCents,
+      0,
+    );
     const lineDiscounts = sale.lines.reduce((s, l) => s + l.discountCents, 0);
     await assertDiscountCap(tx, baseSum, lineDiscounts + sale.cartDiscountCents);
 
@@ -149,6 +150,19 @@ export async function completeSale(saleId: number, body: CompleteSaleBody): Prom
       }
     }
 
+    // The Entry is always VAT-inclusive. For an excl.-VAT sale, gross before discount is
+    // every line base with its VAT added, and the discount is whatever brings that down
+    // to the exact sale total.
+    const entryGrossBefore = sale.pricesExclVat
+      ? sale.lines.reduce(
+          (s, l) => s + addVatToNet(l.lineNetCents + l.discountCents, l.vatRateBp).grossCents,
+          0,
+        )
+      : baseSum;
+    const entryDiscount = sale.pricesExclVat
+      ? Math.max(0, entryGrossBefore - totals.totalGrossCents)
+      : lineDiscounts + sale.cartDiscountCents;
+
     // ---- the income Entry (gross BEFORE discount = Σ base; one VAT rate = dominant)
     const entry = await createEntry(tx, {
       entryDate: businessDate,
@@ -156,8 +170,8 @@ export async function completeSale(saleId: number, body: CompleteSaleBody): Prom
       unitId: sale.unitId,
       customerId: sale.customerId,
       description: `POS sale ${sale.number}`,
-      grossBeforeDiscountCents: baseSum,
-      discountCents: lineDiscounts + sale.cartDiscountCents,
+      grossBeforeDiscountCents: entryGrossBefore,
+      discountCents: entryDiscount,
       discountReason: sale.cartDiscountReason,
       vatInvoice,
       vatRateBp: rateBp,
@@ -343,10 +357,7 @@ export async function refundSale(saleId: number, body: RefundBody): Promise<Refu
     if (entry.status === 'VOID') throw conflict('ENTRY_VOID', "The sale's income entry is voided");
 
     // Effective (post-cart-discount) per-line values — exactly what the customer paid.
-    const totals = effectiveSaleTotals(
-      sale.lines.map((l) => ({ lineGrossCents: l.lineGrossCents, vatRateBp: l.vatRateBp })),
-      sale.cartDiscountCents,
-    );
+    const totals = effectiveSaleTotals(sale.lines, sale.cartDiscountCents, sale.pricesExclVat);
     const lineIndexById = new Map(sale.lines.map((l, i) => [l.id, i]));
 
     // What is still refundable, pooled by key across earlier credit notes.

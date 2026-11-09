@@ -1,7 +1,7 @@
 ﻿import { Router } from 'express';
 import type { Prisma } from '@prisma/client';
 import type { z } from 'zod';
-import { internalProductCode, parseInternalProductCode, todayInHelsinki } from '@emotionfix/shared';
+import { addVatToNet, internalProductCode, parseInternalProductCode, todayInHelsinki } from '@emotionfix/shared';
 import { prisma } from '../../db.js';
 import { AppError, notFound } from '../../errors.js';
 import { requireAuth } from '../../middleware/auth.js';
@@ -154,7 +154,8 @@ productsRouter.get(
       const pdf = await buildLabelsPdf({
         sku: product.sku,
         name: product.nameEn,
-        priceCents: product.priceCents,
+        // shelf labels show what the customer pays (VAT included)
+        priceCents: addVatToNet(product.priceCents, product.vatRateBp).grossCents,
         barcodeText,
         qty,
       });

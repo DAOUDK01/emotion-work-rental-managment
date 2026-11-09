@@ -326,7 +326,7 @@ model Product {
   brand           String?
   compatibleUnits String? // free text: which unit models this part fits
   costCents       Int? // last purchase cost
-  priceCents      Int // selling price, VAT-INCLUSIVE (gross)
+  priceCents      Int // selling price WITHOUT VAT (net); VAT is added on top at the till
   wholesaleCents  Int? // future: wholesale price list
   vatRateBp       Int      @default(2550)
   trackStock      Boolean  @default(true) // services (labour) = false
@@ -539,6 +539,9 @@ model Sale {
   status         SaleStatus    @default(PARKED)
   cartDiscountCents Int        @default(0)
   cartDiscountReason String?
+  // true = unit prices / discounts are WITHOUT VAT and VAT is added on top (every sale since
+  // the "VAT on top" change); false = older sales priced VAT-inclusive.
+  pricesExclVat  Boolean      @default(true)
   totalGrossCents Int          @default(0)
   totalVatCents   Int          @default(0)
   totalNetCents   Int          @default(0)
@@ -569,7 +572,7 @@ model SaleLine {
   product        Product? @relation(fields: [productId], references: [id])
   description    String
   qty            Decimal  @db.Decimal(10, 2)
-  unitPriceCents Int // gross per unit (before line discount)
+  unitPriceCents Int // per unit before line discount: net if sale.pricesExclVat, else gross
   discountCents  Int      @default(0) // per line, absolute
   discountReason String?
   vatRateBp      Int

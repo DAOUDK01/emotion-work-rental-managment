@@ -60,6 +60,7 @@ export interface SaleLine {
   isLabour: boolean;
   cartShareCents: number;
   effectiveGrossCents: number;
+  effectiveNetCents: number;
 }
 
 export interface VatRateRow {
@@ -107,6 +108,8 @@ export interface Sale {
   unit: { id: number; code: string; brand: string } | null;
   cartDiscountCents: number;
   cartDiscountReason: string | null;
+  /** true = prices, discounts and line amounts are WITHOUT VAT; VAT is added on top. */
+  pricesExclVat: boolean;
   lineDiscountCents: number;
   discountCents: number;
   totalGrossCents: number;
@@ -321,4 +324,19 @@ export function todayIso(): string {
   const mm = String(d.getMonth() + 1).padStart(2, '0');
   const dd = String(d.getDate()).padStart(2, '0');
   return `${d.getFullYear()}-${mm}-${dd}`;
+}
+
+// ---------------------------------------------------------------- VAT on top
+
+/** New sales (and an empty cart) are priced without VAT; only older sales include it. */
+export function saleExclVat(sale: { pricesExclVat: boolean } | undefined | null): boolean {
+  return sale?.pricesExclVat ?? true;
+}
+
+/** A line's amount in the sale's own pricing: without VAT for new sales, with VAT for old ones. */
+export function lineAmountCents(
+  line: { lineGrossCents: number; lineNetCents: number },
+  exclVat: boolean,
+): number {
+  return exclVat ? line.lineNetCents : line.lineGrossCents;
 }

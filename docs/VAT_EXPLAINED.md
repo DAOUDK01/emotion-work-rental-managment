@@ -6,7 +6,9 @@ VAT returns — the system gives them exact numbers and exports.*
 ## The one rule to remember
 
 **Finland's general VAT rate is 25.5 %.** Every price you charge a customer is treated as
-VAT-INCLUSIVE (gross). The rate lives in Settings → VAT rates with a start date, so when
+VAT-INCLUSIVE (gross). **Exception: the till (POS).** Product prices and anything typed
+into the till are WITHOUT VAT, and the till adds 25.5 % on top: €40 of labour is charged €50.20.
+Shelf labels still print the price with VAT. The rate lives in Settings → VAT rates with a start date, so when
 Finland changes the rate, you add a new line and old records stay correct.
 
 ## VAT collected (money you owe the tax office)

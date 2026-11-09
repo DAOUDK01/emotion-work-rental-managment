@@ -15,7 +15,16 @@ import { cn } from '@/components/ui/utils';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Badge, EmptyState, ErrorState, LoadingState } from '@/components/ui/misc';
-import { fmtVatRate, modelName, productName, type Sale, type SaleLine, type SaleSummary } from './types';
+import {
+  fmtVatRate,
+  lineAmountCents,
+  modelName,
+  productName,
+  saleExclVat,
+  type Sale,
+  type SaleLine,
+  type SaleSummary,
+} from './types';
 
 export interface CartActions {
   onQty: (line: SaleLine, qty: number) => void;
@@ -62,7 +71,8 @@ export function CartPane({
   const lang = i18n.language;
   const lines = sale?.lines ?? [];
   const hasLines = lines.length > 0;
-  const subtotalCents = lines.reduce((s, l) => s + l.lineGrossCents + l.discountCents, 0);
+  const exclVat = saleExclVat(sale);
+  const subtotalCents = lines.reduce((s, l) => s + lineAmountCents(l, exclVat) + l.discountCents, 0);
 
   return (
     <Card className="flex min-h-[28rem] flex-col lg:sticky lg:top-4 lg:max-h-[calc(100vh-6rem)]">
@@ -132,7 +142,7 @@ export function CartPane({
                         </p>
                       ) : null}
                     </div>
-                    <span className="shrink-0 text-base font-semibold tabular-nums">{fmtEUR(line.lineGrossCents)}</span>
+                    <span className="shrink-0 text-base font-semibold tabular-nums">{fmtEUR(lineAmountCents(line, exclVat))}</span>
                   </div>
                   <div className="flex items-center gap-1.5">
                     <Button
@@ -210,7 +220,10 @@ export function CartPane({
 
       {/* totals */}
       <div className="space-y-1 border-t p-3">
-        <TotalRow label={t('totals.subtotal')} value={fmtEUR(subtotalCents)} />
+        <TotalRow
+          label={exclVat ? t('totals.subtotalExclVat') : t('totals.subtotal')}
+          value={fmtEUR(subtotalCents)}
+        />
         <TotalRow
           label={t('totals.discounts')}
           value={sale && sale.discountCents > 0 ? fmtEUR(-sale.discountCents) : fmtEUR(0)}
@@ -221,7 +234,10 @@ export function CartPane({
             {t('totals.cartDiscountReason', { reason: sale.cartDiscountReason })}
           </p>
         ) : null}
-        <TotalRow label={t('totals.vatIncluded')} value={fmtEUR(sale?.totalVatCents ?? 0)} />
+        <TotalRow
+          label={exclVat ? t('totals.vatAdded') : t('totals.vatIncluded')}
+          value={fmtEUR(sale?.totalVatCents ?? 0)}
+        />
         <div className="flex items-baseline justify-between gap-2 pt-1">
           <span className="text-base font-semibold">{t('totals.total')}</span>
           <span className="text-4xl font-bold tabular-nums tracking-tight">{fmtEUR(sale?.totalGrossCents ?? 0)}</span>

@@ -8,7 +8,10 @@ Monorepo: `apps/api` (Express 4 + Prisma + PostgreSQL 16), `apps/web` (React 18 
 - **Money is never a float.** All amounts are integer euro cents in fields named `*Cents`.
   Parse user input with `parseAmountToCents`, round with `roundHalfAwayFromZero` (half away from zero, per line).
 - **VAT**: rates are basis points (`2550` = 25.5 %). Prices are entered gross (VAT-inclusive):
-  `splitGross(gross, rateBp)`. Net entry supported via `addVatToNet`. Income VAT follows the
+  `splitGross(gross, rateBp)`. Net entry supported via `addVatToNet`. **Exception — POS and product
+  cards:** product `priceCents` is WITHOUT VAT and POS sales (`Sale.pricesExclVat = true`) price lines
+  without VAT and add it on top per line (`addVatToNet`); older sales (`pricesExclVat = false`) keep the
+  VAT-inclusive maths. Invoices convert a product price to gross when it is picked. Income VAT follows the
   "VAT invoice issued?" flag — `incomeVat(gross, rateBp, vatInvoice)`; when false the full amount is
   non-VAT income. Purchases reclaim via `reclaimableVat({grossCents, rateBp, hasValidReceipt, businessUsePct})`.
 - **Every income is an `Entry`** created via `createEntry` from `src/services/entries.ts` inside a

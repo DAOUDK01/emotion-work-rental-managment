@@ -2,7 +2,7 @@ import { bpToPct, formatEUR, type MoneyLocale } from '@emotionfix/shared';
 import { getSetting } from '../../services/settings.js';
 import { buildPdf, pdfHeader, pdfMoney, PDF_COLORS } from '../../services/pdf.js';
 import { effectiveSaleTotals, toIsoDate, type SaleDetail } from './service.js';
-import { vatByRate, type VatRateRow } from './totals.js';
+import { lineBasisCents, vatByRate, type VatRateRow } from './totals.js';
 
 /**
  * Receipts: a self-contained thermal HTML document (@page sized to the roll width,
@@ -158,6 +158,10 @@ interface ReceiptModel {
   statusLabel: string | null;
   showVatTable: boolean;
   vatRows: VatRateRow[];
+  /** true = line amounts are WITHOUT VAT and the VAT is shown added on top. */
+  exclVat: boolean;
+  /** A line's printed amount: net for excl.-VAT sales, gross for older ones. */
+  lineAmount: (l: SaleDetail['lines'][number]) => number;
   lineSum: number;
   payments: SaleDetail['payments'];
 }
@@ -166,10 +170,9 @@ function receiptModel(sale: SaleDetail): ReceiptModel {
   const lang: 'EN' | 'FI' = sale.customer?.language === 'FI' ? 'FI' : 'EN';
   const t = DICT[lang];
   const locale: MoneyLocale = lang === 'FI' ? 'fi' : 'en';
-  const totals = effectiveSaleTotals(
-    sale.lines.map((l) => ({ lineGrossCents: l.lineGrossCents, vatRateBp: l.vatRateBp })),
-    sale.cartDiscountCents,
-  );
+  const exclVat = sale.pricesExclVat;
+  const totals = effectiveSaleTotals(sale.lines, sale.cartDiscountCents, exclVat);
+  const lineAmount = (l: SaleDetail['lines'][number]) => lineBasisCents(l, exclVat);
   const statusLabel =
     sale.status === 'PARKED'
       ? t.proforma
@@ -190,7 +193,9 @@ function receiptModel(sale: SaleDetail): ReceiptModel {
     // A completed non-VAT sale must not present itself as a VAT invoice.
     showVatTable: sale.entry ? sale.entry.vatInvoice : true,
     vatRows: vatByRate(totals.lines),
-    lineSum: sale.lines.reduce((s, l) => s + l.lineGrossCents, 0),
+    exclVat,
+    lineAmount,
+    lineSum: sale.lines.reduce((s, l) => s + lineAmount(l), 0),
     payments: sale.payments.filter((p) => p.status === 'ACTIVE' && p.amountCents >= 0),
   };
 }
@@ -214,7 +219,7 @@ export function receiptHtml(sale: SaleDetail, company: CompanyInfo, width: 80 | 
   const lineBlocks = sale.lines
     .map((l) => {
       const parts = [
-        row(esc(l.description), m.fmt(l.lineGrossCents)),
+        row(esc(l.description), m.fmt(m.lineAmount(l))),
         row(`${m.qtyStr(Number(l.qty))} × ${m.fmt(l.unitPriceCents)}`, '', 'muted'),
       ];
       if (l.discountCents > 0) {
@@ -232,16 +237,19 @@ export function receiptHtml(sale: SaleDetail, company: CompanyInfo, width: 80 | 
     })
     .join('\n');
 
-  const cartDiscountBlock =
-    sale.cartDiscountCents > 0
+  const cartDiscountBlock = [
+    ...(sale.cartDiscountCents > 0 || m.exclVat ? [row(t.subtotal, m.fmt(m.lineSum))] : []),
+    ...(sale.cartDiscountCents > 0
       ? [
-          row(t.subtotal, m.fmt(m.lineSum)),
           row(
             `${t.cartDiscount}${sale.cartDiscountReason ? ` (${esc(sale.cartDiscountReason)})` : ''}`,
             `−${m.fmt(sale.cartDiscountCents)}`,
           ),
-        ].join('\n')
-      : '';
+        ]
+      : []),
+    // excl.-VAT sale: the VAT is added on top of the subtotal before the total
+    ...(m.exclVat ? [row(t.vat, m.fmt(sale.totalVatCents))] : []),
+  ].join('\n');
 
   const vatBlock = m.showVatTable
     ? `<table>
@@ -365,28 +373,33 @@ export async function receiptPdf(sale: SaleDetail, company: CompanyInfo): Promis
   ].filter((l) => l !== '');
 
   const linesBody: Cell[][] = [
-    ['#', t.item, 'Qty', 'à', t.discount, t.gross, t.vatPct].map(th),
+    ['#', t.item, 'Qty', 'à', t.discount, m.exclVat ? t.net : t.gross, t.vatPct].map(th),
     ...sale.lines.map((l, i) => [
       td(String(i + 1)),
       td(l.description),
       td(m.qtyStr(Number(l.qty)), { right: true }),
       td(money(l.unitPriceCents), { right: true }),
       td(l.discountCents > 0 ? `−${money(l.discountCents)}` : '', { right: true }),
-      td(money(l.lineGrossCents), { right: true }),
+      td(money(m.lineAmount(l)), { right: true }),
       td(m.pctStr(l.vatRateBp), { right: true }),
     ]),
   ];
 
   const totalsStack: Cell[] = [
+    ...(sale.cartDiscountCents > 0 || m.exclVat
+      ? [{ text: `${t.subtotal}: ${money(m.lineSum)}`, fontSize: 9, alignment: 'right' } as Cell]
+      : []),
     ...(sale.cartDiscountCents > 0
       ? [
-          { text: `${t.subtotal}: ${money(m.lineSum)}`, fontSize: 9, alignment: 'right' },
           {
             text: `${t.cartDiscount}${sale.cartDiscountReason ? ` (${sale.cartDiscountReason})` : ''}: −${money(sale.cartDiscountCents)}`,
             fontSize: 9,
             alignment: 'right',
-          },
+          } as Cell,
         ]
+      : []),
+    ...(m.exclVat
+      ? [{ text: `${t.vat}: ${money(sale.totalVatCents)}`, fontSize: 9, alignment: 'right' } as Cell]
       : []),
     {
       text: `${t.total}: ${money(sale.totalGrossCents)}`,

@@ -4,6 +4,7 @@ import path from 'node:path';
 import type { Prisma } from '@prisma/client';
 import {
   addDays,
+  addVatToNet,
   formatEUR,
   formatFinnishReference,
   makeFinnishReference,
@@ -397,7 +398,8 @@ export async function computeLines(
       }
       productId = product.id;
       description = description ?? (language === 'FI' ? (product.nameFi ?? product.nameEn) : product.nameEn);
-      unitPrice = unitPrice ?? product.priceCents;
+      // product cards are priced without VAT; invoice lines are VAT-inclusive
+      unitPrice = unitPrice ?? addVatToNet(product.priceCents, product.vatRateBp).grossCents;
       rate = rate ?? product.vatRateBp;
     }
     // The zod schema guarantees these; keep the checks so the invariant can never drift.

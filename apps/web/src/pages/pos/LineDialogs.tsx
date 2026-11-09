@@ -228,11 +228,14 @@ interface CustomLineForm {
 export function CustomLineDialog({
   kind,
   lookups,
+  exclVat,
   onClose,
   onSubmit,
 }: {
   kind: 'labour' | 'free' | null;
   lookups: Lookups | undefined;
+  /** true = the typed price is without VAT; VAT is added on top in the cart. */
+  exclVat: boolean;
   onClose: () => void;
   onSubmit: (body: CustomLineBody) => Promise<unknown>;
 }) {
@@ -365,7 +368,7 @@ export function CustomLineDialog({
               <Field label={t('labour.hours')} error={errors.hours?.message} required>
                 <Input inputMode="decimal" placeholder="1,5" {...register('hours')} />
               </Field>
-              <Field label={t('labour.rate')} error={errors.rate?.message} required>
+              <Field label={exclVat ? t('labour.rateExclVat') : t('labour.rate')} error={errors.rate?.message} required>
                 <Input inputMode="decimal" placeholder="0,00" {...register('rate')} />
               </Field>
               <p className="text-sm sm:col-span-2">
@@ -380,7 +383,15 @@ export function CustomLineDialog({
                 </Field>
               ) : null}
               <Field
-                label={kind === 'free' ? t('freeLine.unitPrice') : t('common:money.gross')}
+                label={
+                  kind === 'free'
+                    ? exclVat
+                      ? t('freeLine.unitPriceExclVat')
+                      : t('freeLine.unitPrice')
+                    : exclVat
+                      ? t('labour.amountExclVat')
+                      : t('common:money.gross')
+                }
                 error={errors.amount?.message}
                 required
               >

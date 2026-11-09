@@ -22,7 +22,9 @@ import { SuccessScreen } from './SuccessScreen';
 import { isEditableElement, useBarcodeWedge } from './useBarcodeWedge';
 import {
   errMsg,
+  lineAmountCents,
   productName,
+  saleExclVat,
   type Lookups,
   type ProductRow,
   type RunOp,
@@ -448,7 +450,9 @@ export default function PosPage() {
               : discountLine.description
             : ''
         }
-        baseCents={discountLine ? discountLine.lineGrossCents + discountLine.discountCents : 0}
+        baseCents={
+          discountLine ? lineAmountCents(discountLine, saleExclVat(sale)) + discountLine.discountCents : 0
+        }
         initialCents={discountLine?.discountCents ?? 0}
         initialReason={discountLine?.discountReason ?? null}
         maxDiscountPct={maxDiscountPct}
@@ -459,9 +463,9 @@ export default function PosPage() {
         open={cartDiscountOpen}
         title={t('discount.cartTitle')}
         description={t('discount.cartDescription', {
-          amount: fmtEUR((sale?.lines ?? []).reduce((s, l) => s + l.lineGrossCents, 0)),
+          amount: fmtEUR((sale?.lines ?? []).reduce((s, l) => s + lineAmountCents(l, saleExclVat(sale)), 0)),
         })}
-        baseCents={(sale?.lines ?? []).reduce((s, l) => s + l.lineGrossCents, 0)}
+        baseCents={(sale?.lines ?? []).reduce((s, l) => s + lineAmountCents(l, saleExclVat(sale)), 0)}
         initialCents={sale?.cartDiscountCents ?? 0}
         initialReason={sale?.cartDiscountReason ?? null}
         maxDiscountPct={maxDiscountPct}
@@ -471,6 +475,7 @@ export default function PosPage() {
       <CustomLineDialog
         kind={customKind}
         lookups={lookups.data}
+        exclVat={saleExclVat(sale)}
         onClose={() => setCustomKind(null)}
         onSubmit={submitCustomLine}
       />

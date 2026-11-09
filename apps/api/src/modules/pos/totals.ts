@@ -1,4 +1,4 @@
-import { roundHalfAwayFromZero, splitGross } from '@emotionfix/shared';
+import { addVatToNet, roundHalfAwayFromZero, splitGross } from '@emotionfix/shared';
 import { badRequest } from '../../errors.js';
 
 /**
@@ -6,15 +6,34 @@ import { badRequest } from '../../errors.js';
  *
  * Rules (CONVENTIONS.md):
  * - money is integer cents, rounded half away from zero per line;
- * - prices are gross (VAT-inclusive), VAT = splitGross(gross, rateBp);
- * - discounts reduce the base BEFORE the VAT split.
+ * - a sale is priced one of two ways (Sale.pricesExclVat):
+ *   - EXCL. VAT (every sale since the "VAT on top" change): unit prices and discounts
+ *     are WITHOUT VAT; line net = base − discount, VAT = addVatToNet(net, rateBp) on top;
+ *   - INCL. VAT (older sales): unit prices are gross, VAT = splitGross(gross, rateBp);
+ * - discounts always reduce the base BEFORE VAT is worked out.
+ *
+ * The "basis" of a line is the amount its prices are typed in: net for excl.-VAT sales,
+ * gross for incl.-VAT sales.
  *
  * Cart discount: sale lines keep their PRE-cart-discount values. The cart discount is
- * distributed across the lines proportionally to lineGrossCents using the LARGEST
- * REMAINDER method (cents always sum exactly), then each line's effective share is
- * re-split with splitGross at its own VAT rate. Sale totals are the sums of those
- * effective values, so totalGross = Σ lineGross − cartDiscount to the cent.
+ * distributed across the lines proportionally to the line basis using the LARGEST
+ * REMAINDER method (cents always sum exactly), then VAT is worked out again on each
+ * line's effective basis at its own rate. Sale totals are the sums of those
+ * effective values.
  */
+
+/** The amount a line's prices are typed in: net (excl. VAT) or gross (incl. VAT). */
+export function lineBasisCents(
+  line: { lineGrossCents: number; lineNetCents: number },
+  exclVat: boolean,
+): number {
+  return exclVat ? line.lineNetCents : line.lineGrossCents;
+}
+
+/** VAT split of a basis amount: VAT added on top of a net amount, or split out of a gross one. */
+function vatOfBasis(basisCents: number, rateBp: number, exclVat: boolean) {
+  return exclVat ? addVatToNet(basisCents, rateBp) : splitGross(basisCents, rateBp);
+}
 
 // ---------------------------------------------------------------- quantities
 
@@ -30,10 +49,10 @@ export function qtyToHundredths(qty: number): number {
 // ---------------------------------------------------------------- line amounts
 
 export interface LineAmounts {
-  /** qty × unitPrice before any discount (gross). */
+  /** qty × unitPrice before any discount (in the sale's basis: net or gross). */
   baseCents: number;
   discountCents: number;
-  /** base − discount (gross, VAT-inclusive). */
+  /** After discount, VAT-inclusive. */
   lineGrossCents: number;
   lineVatCents: number;
   lineNetCents: number;
@@ -41,7 +60,8 @@ export interface LineAmounts {
 
 /**
  * base = round(qty × unitPrice); discount = discountCents ?? round(base × pct / 100);
- * lineGross = base − discount (≥ 0 or 400); VAT via splitGross at the line's rate.
+ * amount = base − discount (≥ 0 or 400). Excl. VAT: amount is the net and VAT goes on
+ * top; incl. VAT: amount is the gross and VAT is split out of it.
  */
 export function computeLineAmounts(args: {
   qty: number;
@@ -49,6 +69,8 @@ export function computeLineAmounts(args: {
   discountCents?: number | null;
   discountPct?: number | null;
   vatRateBp: number;
+  /** true = prices are without VAT (VAT added on top). */
+  exclVat?: boolean;
 }): LineAmounts {
   const qtyH = qtyToHundredths(args.qty);
   if (!Number.isInteger(args.unitPriceCents) || args.unitPriceCents < 0) {
@@ -71,21 +93,28 @@ export function computeLineAmounts(args: {
     throw badRequest('BAD_DISCOUNT', 'Discount cannot be negative');
   }
 
-  const lineGrossCents = baseCents - discountCents;
-  if (lineGrossCents < 0) {
+  const amountCents = baseCents - discountCents;
+  if (amountCents < 0) {
     throw badRequest('DISCOUNT_EXCEEDS_AMOUNT', 'Line discount is larger than the line amount', {
       baseCents,
       discountCents,
     });
   }
-  const split = splitGross(lineGrossCents, args.vatRateBp);
-  return { baseCents, discountCents, lineGrossCents, lineVatCents: split.vatCents, lineNetCents: split.netCents };
+  const split = vatOfBasis(amountCents, args.vatRateBp, args.exclVat ?? false);
+  return {
+    baseCents,
+    discountCents,
+    lineGrossCents: split.grossCents,
+    lineVatCents: split.vatCents,
+    lineNetCents: split.netCents,
+  };
 }
 
 // ---------------------------------------------------------------- cart discount distribution
 
 export interface CartLine {
   lineGrossCents: number;
+  lineNetCents: number;
   vatRateBp: number;
 }
 
@@ -106,16 +135,22 @@ export interface SaleTotals {
 }
 
 /**
- * Distribute the cart discount over the lines proportionally to lineGross using the
- * largest remainder method, then recompute VAT per line at its own rate.
+ * Distribute the cart discount (in the sale's basis) over the lines proportionally to
+ * the line basis using the largest remainder method, then recompute VAT per line at
+ * its own rate.
  * Index-aligned with the input array. Throws 400 when the cart discount exceeds the
  * line total (CART_DISCOUNT_EXCEEDS_TOTAL).
  */
-export function distributeCartDiscount(lines: CartLine[], cartDiscountCents: number): SaleTotals {
+export function distributeCartDiscount(
+  lines: CartLine[],
+  cartDiscountCents: number,
+  exclVat = false,
+): SaleTotals {
   if (!Number.isInteger(cartDiscountCents) || cartDiscountCents < 0) {
     throw badRequest('BAD_DISCOUNT', 'Cart discount must be a non-negative integer amount of cents');
   }
-  const lineSum = lines.reduce((s, l) => s + l.lineGrossCents, 0);
+  const basis = lines.map((l) => lineBasisCents(l, exclVat));
+  const lineSum = basis.reduce((s, b) => s + b, 0);
   if (cartDiscountCents > lineSum) {
     throw badRequest('CART_DISCOUNT_EXCEEDS_TOTAL', 'Cart discount is larger than the sum of the lines', {
       cartDiscountCents,
@@ -125,7 +160,7 @@ export function distributeCartDiscount(lines: CartLine[], cartDiscountCents: num
 
   const shares = new Array<number>(lines.length).fill(0);
   if (cartDiscountCents > 0 && lineSum > 0) {
-    const exact = lines.map((l) => (cartDiscountCents * l.lineGrossCents) / lineSum);
+    const exact = basis.map((b) => (cartDiscountCents * b) / lineSum);
     let assigned = 0;
     for (let i = 0; i < lines.length; i++) {
       shares[i] = Math.floor(exact[i]);
@@ -134,18 +169,18 @@ export function distributeCartDiscount(lines: CartLine[], cartDiscountCents: num
     let remaining = cartDiscountCents - assigned;
     // Hand out the leftover cents by largest fractional remainder (ties: larger line, then index).
     const order = lines
-      .map((l, i) => ({ i, rem: exact[i] - shares[i], gross: l.lineGrossCents }))
-      .sort((a, b) => b.rem - a.rem || b.gross - a.gross || a.i - b.i);
+      .map((_, i) => ({ i, rem: exact[i] - shares[i], size: basis[i] }))
+      .sort((a, b) => b.rem - a.rem || b.size - a.size || a.i - b.i);
     for (const o of order) {
       if (remaining <= 0) break;
-      if (shares[o.i] < lines[o.i].lineGrossCents) {
+      if (shares[o.i] < basis[o.i]) {
         shares[o.i] += 1;
         remaining -= 1;
       }
     }
     // Float-safety fallbacks — mathematically unreachable, but cents must ALWAYS sum exactly.
     for (let i = 0; i < lines.length && remaining > 0; i++) {
-      const room = lines[i].lineGrossCents - shares[i];
+      const room = basis[i] - shares[i];
       const add = Math.min(room, remaining);
       shares[i] += add;
       remaining -= add;
@@ -158,19 +193,19 @@ export function distributeCartDiscount(lines: CartLine[], cartDiscountCents: num
   }
 
   const out: DistributedLine[] = lines.map((l, i) => {
-    const effectiveGrossCents = l.lineGrossCents - shares[i];
-    const split = splitGross(effectiveGrossCents, l.vatRateBp);
+    const split = vatOfBasis(basis[i] - shares[i], l.vatRateBp, exclVat);
     return {
       lineGrossCents: l.lineGrossCents,
+      lineNetCents: l.lineNetCents,
       vatRateBp: l.vatRateBp,
       cartShareCents: shares[i],
-      effectiveGrossCents,
+      effectiveGrossCents: split.grossCents,
       effectiveVatCents: split.vatCents,
       effectiveNetCents: split.netCents,
     };
   });
 
-  const totalGrossCents = lineSum - cartDiscountCents;
+  const totalGrossCents = out.reduce((s, l) => s + l.effectiveGrossCents, 0);
   const totalVatCents = out.reduce((s, l) => s + l.effectiveVatCents, 0);
   return { totalGrossCents, totalVatCents, totalNetCents: totalGrossCents - totalVatCents, lines: out };
 }

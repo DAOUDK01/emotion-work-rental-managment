@@ -35,7 +35,7 @@
     "createAndAdd": "Create and add to cart",
     "created": "Product created",
     "name": "Product name",
-    "price": "Price incl. VAT (€)",
+    "price": "Price excl. VAT (€)",
     "trackStock": "Track stock for this product"
   },
   "cart": {
@@ -73,7 +73,9 @@
     "discounts": "Discounts",
     "cartDiscountReason": "Cart discount: {{reason}}",
     "vatIncluded": "VAT included",
-    "total": "TOTAL"
+    "total": "TOTAL",
+    "subtotalExclVat": "Subtotal excl. VAT",
+    "vatAdded": "+ VAT"
   },
   "discount": {
     "lineTitle": "Line discount",
@@ -99,12 +101,15 @@
     "rate": "Hourly rate (€)",
     "computed": "Amount",
     "addToCart": "Add to cart",
-    "added": "Line added"
+    "added": "Line added",
+    "rateExclVat": "Hourly rate excl. VAT (€)",
+    "amountExclVat": "Amount excl. VAT (€)"
   },
   "freeLine": {
     "title": "Add free-text line",
     "qty": "Quantity",
-    "unitPrice": "Unit price incl. VAT (€)"
+    "unitPrice": "Unit price incl. VAT (€)",
+    "unitPriceExclVat": "Unit price excl. VAT (€)"
   },
   "details": {
     "title": "Customer & sale details",

@@ -3,6 +3,7 @@ import { useTranslation } from 'react-i18next';
 import { toast } from 'sonner';
 import { Plus, ScanBarcode, Trash2 } from 'lucide-react';
 import { api, ApiError, qs } from '@/lib/api';
+import { addVatToNet } from '@emotionfix/shared';
 import { centsToInput, fmtEUR } from '@/lib/format';
 import { Button } from '@/components/ui/button';
 import { Input, Select } from '@/components/ui/input';
@@ -67,7 +68,8 @@ export function LinesEditor({
           productSku: product.sku,
           description: productName(product, language),
           qty: '1',
-          unitPrice: centsToInput(product.priceCents),
+          // product cards are priced without VAT; invoice unit prices include VAT
+          unitPrice: centsToInput(addVatToNet(product.priceCents, product.vatRateBp).grossCents),
           discount: '',
           vatRateBp: product.vatRateBp,
           isLabour: !product.trackStock,
@@ -136,7 +138,7 @@ export function LinesEditor({
                   {p.stockQty !== null ? ` · ${t('lines.inStock', { qty: p.stockQty })}` : ''}
                 </div>
               </div>
-              <span className="shrink-0 tabular-nums">{fmtEUR(p.priceCents)}</span>
+              <span className="shrink-0 tabular-nums">{fmtEUR(addVatToNet(p.priceCents, p.vatRateBp).grossCents)}</span>
             </div>
           )}
           onPick={addProduct}

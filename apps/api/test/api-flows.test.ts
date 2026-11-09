@@ -171,10 +171,11 @@ describe('POS: stock decrement, split payment, refund restocks', () => {
     const line = await post(`/pos/sales/${saleId}/lines`).send({ productId, qty: 2 });
     expect(line.status, JSON.stringify(line.body)).toBe(201);
 
+    // product price 15.00 is WITHOUT VAT: 2 × 15.00 = 30.00 + 25.5 % VAT 7.65 = 37.65
     const complete = await post(`/pos/sales/${saleId}/complete`).send({
       payments: [
         { methodId: method('Card'), receivedById: holder('Company Account'), amountCents: 2000 },
-        { methodId: method('Cash'), receivedById: holder('Ahmed'), amountCents: 1000 },
+        { methodId: method('Cash'), receivedById: holder('Ahmed'), amountCents: 1765 },
       ],
     });
     expect(complete.status, JSON.stringify(complete.body)).toBe(200);
@@ -182,7 +183,7 @@ describe('POS: stock decrement, split payment, refund restocks', () => {
     const stock = await prisma.stockMovement.aggregate({ where: { productId }, _sum: { qty: true } });
     expect(stock._sum.qty).toBe(8);
     const entry = await prisma.entry.findFirst({ where: { saleId } });
-    expect(entry?.grossCents).toBe(3000);
+    expect(entry?.grossCents).toBe(3765);
     expect(entry?.paymentStatus).toBe('PAID');
   });
   it('refund with restock creates a credit note, returns stock and reverses income', async () => {
@@ -192,7 +193,7 @@ describe('POS: stock decrement, split payment, refund restocks', () => {
       lines: [{ lineId, qty: 2 }],
       reason: 'customer returned the pads',
       restock: true,
-      refundPayments: [{ methodId: method('Cash'), receivedById: holder('Ahmed'), amountCents: 3000 }],
+      refundPayments: [{ methodId: method('Cash'), receivedById: holder('Ahmed'), amountCents: 3765 }],
     });
     expect(refund.status, JSON.stringify(refund.body)).toBe(200);
     expect(refund.body.creditNote).toBeDefined();
@@ -204,6 +205,40 @@ describe('POS: stock decrement, split payment, refund restocks', () => {
       _sum: { grossCents: true },
     });
     expect(entrySum._sum.grossCents).toBe(0); // original + reversing entry cancel out
+  });
+});
+
+describe('POS: prices are without VAT and VAT is added on top', () => {
+  it('labour 40 + diagnosis 20 = 60 + 25.5 % VAT = 75.30', async () => {
+    const sale = await post('/pos/sales').send({ modelId: model('REPAIR') });
+    expect(sale.status, JSON.stringify(sale.body)).toBe(201);
+    const saleId = sale.body.sale.id;
+    expect(sale.body.sale.pricesExclVat).toBe(true);
+    for (const [description, cents] of [['Labour', 4000], ['Diagnosis', 2000]] as const) {
+      const line = await post(`/pos/sales/${saleId}/lines`).send({
+        description,
+        qty: 1,
+        unitPriceCents: cents,
+        vatRateBp: 2550,
+        isLabour: true,
+      });
+      expect(line.status, JSON.stringify(line.body)).toBe(201);
+    }
+    const after = await admin.get(`/api/pos/sales/${saleId}`);
+    expect(after.body.sale.totalNetCents).toBe(6000);
+    expect(after.body.sale.totalVatCents).toBe(1530);
+    expect(after.body.sale.totalGrossCents).toBe(7530);
+
+    // a 10.00 cart discount comes off the price without VAT: 50.00 + 12.75 VAT = 62.75
+    const discounted = await admin
+      .put(`/api/pos/sales/${saleId}`)
+      .set('X-CSRF-Token', csrf)
+      .send({ cartDiscountCents: 1000, cartDiscountReason: 'regular customer' });
+    expect(discounted.status, JSON.stringify(discounted.body)).toBe(200);
+    const final = await admin.get(`/api/pos/sales/${saleId}`);
+    expect(final.body.sale.totalNetCents).toBe(5000);
+    expect(final.body.sale.totalVatCents).toBe(1275);
+    expect(final.body.sale.totalGrossCents).toBe(6275);
   });
 });
 

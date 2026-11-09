@@ -1,5 +1,5 @@
 import type { Prisma } from '@prisma/client';
-import { roundHalfAwayFromZero, todayInHelsinki, type ISODate } from '@emotionfix/shared';
+import { addVatToNet, roundHalfAwayFromZero, todayInHelsinki, type ISODate } from '@emotionfix/shared';
 import { nextNumber, prisma } from '../../db.js';
 import { currentUserId, requestContext } from '../../context.js';
 import { AppError, badRequest, conflict, notFound } from '../../errors.js';
@@ -9,6 +9,7 @@ import type { AddLineBody, CreateSaleBody, ListSalesQuery, UpdateLineBody, Updat
 import {
   computeLineAmounts,
   distributeCartDiscount,
+  lineBasisCents,
   vatByRate,
   type SaleTotals,
 } from './totals.js';
@@ -91,11 +92,23 @@ export type SaleDetail = Prisma.SaleGetPayload<{ include: typeof saleDetailInclu
  * clamped to the line sum so serialisation can never throw on historical rows.
  */
 export function effectiveSaleTotals(
-  lines: Array<{ lineGrossCents: number; vatRateBp: number }>,
+  lines: Array<{ lineGrossCents: number; lineNetCents: number; vatRateBp: number }>,
   cartDiscountCents: number,
+  exclVat: boolean,
 ): SaleTotals {
-  const lineSum = lines.reduce((s, l) => s + l.lineGrossCents, 0);
-  return distributeCartDiscount(lines, Math.min(cartDiscountCents, lineSum));
+  const lineSum = lines.reduce((s, l) => s + lineBasisCents(l, exclVat), 0);
+  return distributeCartDiscount(lines, Math.min(cartDiscountCents, lineSum), exclVat);
+}
+
+/**
+ * A product card's price (always WITHOUT VAT) in the sale's basis: as is for an
+ * excl.-VAT sale, with VAT added for an older incl.-VAT cart.
+ */
+export function productPriceForSale(
+  product: { priceCents: number; vatRateBp: number },
+  exclVat: boolean,
+): number {
+  return exclVat ? product.priceCents : addVatToNet(product.priceCents, product.vatRateBp).grossCents;
 }
 
 export function serializeSaleSummary(s: SaleListItem) {
@@ -111,6 +124,7 @@ export function serializeSaleSummary(s: SaleListItem) {
     unit: s.unit,
     cartDiscountCents: s.cartDiscountCents,
     cartDiscountReason: s.cartDiscountReason,
+    pricesExclVat: s.pricesExclVat,
     totalGrossCents: s.totalGrossCents,
     totalVatCents: s.totalVatCents,
     totalNetCents: s.totalNetCents,
@@ -122,10 +136,7 @@ export function serializeSaleSummary(s: SaleListItem) {
 }
 
 export function serializeSaleDetail(s: SaleDetail) {
-  const totals = effectiveSaleTotals(
-    s.lines.map((l) => ({ lineGrossCents: l.lineGrossCents, vatRateBp: l.vatRateBp })),
-    s.cartDiscountCents,
-  );
+  const totals = effectiveSaleTotals(s.lines, s.cartDiscountCents, s.pricesExclVat);
   const lineDiscountCents = s.lines.reduce((sum, l) => sum + l.discountCents, 0);
   return {
     id: s.id,
@@ -139,6 +150,8 @@ export function serializeSaleDetail(s: SaleDetail) {
     unit: s.unit,
     cartDiscountCents: s.cartDiscountCents,
     cartDiscountReason: s.cartDiscountReason,
+    /** true = unit prices, discounts and line amounts are WITHOUT VAT; VAT is added on top. */
+    pricesExclVat: s.pricesExclVat,
     lineDiscountCents,
     discountCents: lineDiscountCents + s.cartDiscountCents,
     totalGrossCents: s.totalGrossCents,
@@ -164,6 +177,7 @@ export function serializeSaleDetail(s: SaleDetail) {
       /** This line's share of the cart discount + what the customer actually pays. */
       cartShareCents: totals.lines[i].cartShareCents,
       effectiveGrossCents: totals.lines[i].effectiveGrossCents,
+      effectiveNetCents: totals.lines[i].effectiveNetCents,
     })),
     vatByRate: vatByRate(totals.lines),
     payments: s.payments.map((p) => ({
@@ -254,15 +268,18 @@ export async function assertDiscountCap(
  * impossible discount behind.
  */
 export async function recomputeSaleTotals(tx: Tx, saleId: number): Promise<SaleTotals> {
-  const sale = await tx.sale.findUniqueOrThrow({ where: { id: saleId }, select: { cartDiscountCents: true } });
+  const sale = await tx.sale.findUniqueOrThrow({
+    where: { id: saleId },
+    select: { cartDiscountCents: true, pricesExclVat: true },
+  });
   const lines = await tx.saleLine.findMany({
     where: { saleId },
     orderBy: { id: 'asc' },
-    select: { lineGrossCents: true, vatRateBp: true },
+    select: { lineGrossCents: true, lineNetCents: true, vatRateBp: true },
   });
-  const lineSum = lines.reduce((s, l) => s + l.lineGrossCents, 0);
+  const lineSum = lines.reduce((s, l) => s + lineBasisCents(l, sale.pricesExclVat), 0);
   const cartDiscountCents = Math.min(sale.cartDiscountCents, lineSum);
-  const totals = distributeCartDiscount(lines, cartDiscountCents);
+  const totals = distributeCartDiscount(lines, cartDiscountCents, sale.pricesExclVat);
   await tx.sale.update({
     where: { id: saleId },
     data: {
@@ -373,17 +390,18 @@ function assertPriceOverrideAllowed(productPriceCents: number, requestedCents: n
 }
 
 /** Product lines default price / VAT rate / description from the product card. */
-async function resolveNewLine(body: AddLineBody): Promise<ResolvedLine> {
+async function resolveNewLine(body: AddLineBody, exclVat: boolean): Promise<ResolvedLine> {
   if (body.productId != null) {
     const product = await prisma.product.findUnique({ where: { id: body.productId } });
     if (!product) throw badRequest('BAD_PRODUCT', 'Product not found');
     if (!product.active) throw badRequest('PRODUCT_INACTIVE', 'This product is inactive');
-    assertPriceOverrideAllowed(product.priceCents, body.unitPriceCents);
+    const productPrice = productPriceForSale(product, exclVat);
+    assertPriceOverrideAllowed(productPrice, body.unitPriceCents);
     return {
       productId: product.id,
       description: body.description ?? product.nameEn,
       qty: body.qty,
-      unitPriceCents: body.unitPriceCents ?? product.priceCents,
+      unitPriceCents: body.unitPriceCents ?? productPrice,
       discountCents: body.discountCents ?? null,
       discountPct: body.discountPct ?? null,
       discountReason: body.discountReason ?? null,
@@ -411,12 +429,13 @@ async function resolveNewLine(body: AddLineBody): Promise<ResolvedLine> {
 
 export async function addLine(saleId: number, body: AddLineBody): Promise<number> {
   const sale = await loadEditableSale(saleId);
-  const line = await resolveNewLine(body);
+  const exclVat = sale.pricesExclVat;
+  const line = await resolveNewLine(body, exclVat);
   assertStockQty(line.trackStock, line.qty);
-  const amounts = computeLineAmounts(line);
+  const amounts = computeLineAmounts({ ...line, exclVat });
 
   const baseSum =
-    sale.lines.reduce((s, l) => s + l.lineGrossCents + l.discountCents, 0) + amounts.baseCents;
+    sale.lines.reduce((s, l) => s + lineBasisCents(l, exclVat) + l.discountCents, 0) + amounts.baseCents;
   const discountSum =
     sale.lines.reduce((s, l) => s + l.discountCents, 0) + amounts.discountCents + sale.cartDiscountCents;
   await assertDiscountCap(prisma, baseSum, discountSum);
@@ -461,12 +480,13 @@ export async function updateLine(saleId: number, lineId: number, body: UpdateLin
   if (productId != null) {
     const product = await prisma.product.findUnique({ where: { id: productId } });
     if (!product) throw badRequest('BAD_PRODUCT', 'Product not found');
-    assertPriceOverrideAllowed(product.priceCents, body.unitPriceCents);
+    const productPrice = productPriceForSale(product, sale.pricesExclVat);
+    assertPriceOverrideAllowed(productPrice, body.unitPriceCents);
     if (productId !== line.productId) {
       if (!product.active) throw badRequest('PRODUCT_INACTIVE', 'This product is inactive');
       // Switching the product re-defaults everything the caller did not set explicitly.
       description = body.description ?? product.nameEn;
-      unitPriceCents = body.unitPriceCents ?? product.priceCents;
+      unitPriceCents = body.unitPriceCents ?? productPrice;
       vatRateBp = body.vatRateBp ?? product.vatRateBp;
     }
     trackStock = product.trackStock;
@@ -486,10 +506,12 @@ export async function updateLine(saleId: number, lineId: number, body: UpdateLin
   const discountReason = body.discountReason === undefined ? line.discountReason : body.discountReason;
   const isLabour = body.isLabour ?? line.isLabour;
 
-  const amounts = computeLineAmounts({ qty, unitPriceCents, discountCents, discountPct, vatRateBp });
+  const exclVat = sale.pricesExclVat;
+  const amounts = computeLineAmounts({ qty, unitPriceCents, discountCents, discountPct, vatRateBp, exclVat });
 
   const others = sale.lines.filter((l) => l.id !== lineId);
-  const baseSum = others.reduce((s, l) => s + l.lineGrossCents + l.discountCents, 0) + amounts.baseCents;
+  const baseSum =
+    others.reduce((s, l) => s + lineBasisCents(l, exclVat) + l.discountCents, 0) + amounts.baseCents;
   const discountSum =
     others.reduce((s, l) => s + l.discountCents, 0) + amounts.discountCents + sale.cartDiscountCents;
   await assertDiscountCap(prisma, baseSum, discountSum);
@@ -537,7 +559,8 @@ export async function updateSale(saleId: number, body: UpdateSaleBody): Promise<
   const sale = await loadEditableSale(saleId);
   await assertSaleRefs(body);
 
-  const lineSum = sale.lines.reduce((s, l) => s + l.lineGrossCents, 0);
+  const exclVat = sale.pricesExclVat;
+  const lineSum = sale.lines.reduce((s, l) => s + lineBasisCents(l, exclVat), 0);
   let cartDiscountCents = sale.cartDiscountCents;
   if (body.cartDiscountCents !== undefined) {
     cartDiscountCents = body.cartDiscountCents;
@@ -551,7 +574,7 @@ export async function updateSale(saleId: number, body: UpdateSaleBody): Promise<
     });
   }
 
-  const baseSum = sale.lines.reduce((s, l) => s + l.lineGrossCents + l.discountCents, 0);
+  const baseSum = sale.lines.reduce((s, l) => s + lineBasisCents(l, exclVat) + l.discountCents, 0);
   const discountSum = sale.lines.reduce((s, l) => s + l.discountCents, 0) + cartDiscountCents;
   await assertDiscountCap(prisma, baseSum, discountSum);
 

@@ -218,7 +218,8 @@ async function main() {
     const product = await prisma.product.create({
       data: {
         sku, nameEn: `${nameEn}`, nameFi: nameFi ?? undefined, category: marker, costCents: cost || null,
-        priceCents: price, vatRateBp: RATE, trackStock: track, reorderLevel: track ? 5 : 0, location: 'A1',
+        // product cards are priced WITHOUT VAT (the plan lists the shelf price incl. VAT)
+        priceCents: price - Math.round((price * RATE) / (10000 + RATE)), vatRateBp: RATE, trackStock: track, reorderLevel: track ? 5 : 0, location: 'A1',
       },
     });
     if (ean) await prisma.productBarcode.create({ data: { productId: product.id, barcode: ean, type: 'EAN13' } });
