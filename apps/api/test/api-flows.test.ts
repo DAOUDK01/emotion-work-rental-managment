@@ -449,3 +449,97 @@ describe('WhatsApp pipeline (simulate): valid, invalid, duplicate, undo', () => 
     expect(undone?.status).toBe('VOID');
   });
 });
+
+describe('part-payments & customer balance by type', () => {
+  it('tyre change €125: €100 now, €25 a week later', async () => {
+    const cust = await post('/customers').send({ name: 'Tyre Customer', type: 'INDIVIDUAL' });
+    expect(cust.status, JSON.stringify(cust.body)).toBe(201);
+    const customerId = cust.body.customer.id as number;
+
+    // €125 repair, €100 paid now to Ahmed → stays PENDING, €25 owed
+    const created = await post('/entries').send({
+      entryDate: '2026-11-03',
+      modelId: model('REPAIR'),
+      customerId,
+      description: 'Tyre change',
+      grossBeforeDiscountCents: 12500,
+      vatInvoice: false,
+      vatRateBp: 2550,
+      paymentStatus: 'PENDING',
+      paidNowCents: 10000,
+      receivedById: holder('Ahmed'),
+    });
+    expect(created.status, JSON.stringify(created.body)).toBe(201);
+    const entryId = created.body.entry.id as number;
+    expect(created.body.entry.paymentStatus).toBe('PENDING');
+    let payments = await prisma.payment.findMany({ where: { entryId, status: 'ACTIVE' } });
+    expect(payments.map((p) => p.amountCents)).toEqual([10000]);
+
+    // the customer list and the by-type dropdown show only the €25 still owed
+    const list = await admin.get('/api/customers?q=Tyre%20Customer');
+    expect(list.body.customers[0].outstandingCents).toBe(2500);
+    let balance = await admin.get(`/api/customers/${customerId}/balance`);
+    expect(balance.status).toBe(200);
+    const repair = balance.body.byModel.find((b: { model: { code: string } }) => b.model.code === 'REPAIR');
+    expect(repair).toMatchObject({ chargedCents: 12500, receivedCents: 10000, owedCents: 2500 });
+    const codes = balance.body.byModel.map((b: { model: { code: string } }) => b.model.code);
+    expect(codes).toEqual(expect.arrayContaining(['RENTAL', 'REPAIR', 'SPARE_PARTS', 'MISC']));
+    expect(balance.body.openItems).toHaveLength(1);
+    expect(balance.body.openItems[0]).toMatchObject({ entryId, owedCents: 2500, receivedCents: 10000 });
+
+    // paying more than is owed is refused
+    const over = await post(`/entries/${entryId}/payments`).send({ amountCents: 3000, receivedById: holder('Salman') });
+    expect(over.status).toBe(400);
+    expect(over.body.error.code).toBe('OVERPAYMENT');
+
+    // the remaining €25 a week later (to Salman) → PAID, payments add up to €125
+    const rest = await post(`/entries/${entryId}/payments`).send({
+      amountCents: 2500,
+      receivedById: holder('Salman'),
+      date: '2026-11-10',
+    });
+    expect(rest.status, JSON.stringify(rest.body)).toBe(201);
+    expect(rest.body.entry.paymentStatus).toBe('PAID');
+    payments = await prisma.payment.findMany({ where: { entryId, status: 'ACTIVE' }, orderBy: { id: 'asc' } });
+    expect(payments.map((p) => p.amountCents)).toEqual([10000, 2500]);
+    expect(payments.map((p) => p.receivedById)).toEqual([holder('Ahmed'), holder('Salman')]);
+    balance = await admin.get(`/api/customers/${customerId}/balance`);
+    expect(balance.body.totals.owedCents).toBe(0);
+    expect(balance.body.openItems).toHaveLength(0);
+  });
+
+  it('"Mark paid" on a part-paid entry books only the remainder', async () => {
+    const created = await post('/entries').send({
+      entryDate: '2026-11-04',
+      modelId: model('MISC'),
+      customerName: 'Walk-in',
+      grossBeforeDiscountCents: 5000,
+      vatInvoice: false,
+      vatRateBp: 2550,
+      paymentStatus: 'PENDING',
+      paidNowCents: 2000,
+      receivedById: holder('Cash'),
+    });
+    expect(created.status, JSON.stringify(created.body)).toBe(201);
+    const entryId = created.body.entry.id as number;
+    const paid = await post(`/entries/${entryId}/mark-paid`).send({ receivedById: holder('Company Account') });
+    expect(paid.status, JSON.stringify(paid.body)).toBe(200);
+    const payments = await prisma.payment.findMany({ where: { entryId, status: 'ACTIVE' }, orderBy: { id: 'asc' } });
+    expect(payments.map((p) => p.amountCents)).toEqual([2000, 3000]);
+  });
+
+  it('paying the whole amount "now" simply makes the entry paid', async () => {
+    const created = await post('/entries').send({
+      entryDate: '2026-11-04',
+      modelId: model('SPARE_PARTS'),
+      grossBeforeDiscountCents: 1500,
+      vatInvoice: false,
+      vatRateBp: 2550,
+      paymentStatus: 'PENDING',
+      paidNowCents: 1500,
+      receivedById: holder('Cash'),
+    });
+    expect(created.status, JSON.stringify(created.body)).toBe(201);
+    expect(created.body.entry.paymentStatus).toBe('PAID');
+  });
+});

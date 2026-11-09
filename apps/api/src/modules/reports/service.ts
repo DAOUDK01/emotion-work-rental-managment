@@ -9,6 +9,7 @@ import {
 import { prisma } from '../../db.js';
 import { notFound } from '../../errors.js';
 import { taxRateOn } from '../../services/entries.js';
+import { OPEN_STATUSES, withBalances } from '../../services/balances.js';
 import { getSetting } from '../../services/settings.js';
 
 /**
@@ -117,7 +118,16 @@ async function salesFromEntries(
     }
     const row =
       map.get(key) ??
-      ({ key, label, orders: 0, qty: null, grossCents: 0, vatCents: 0, netCents: 0, discountCents: 0 } satisfies SalesRow);
+      ({
+        key,
+        label,
+        orders: 0,
+        qty: null,
+        grossCents: 0,
+        vatCents: 0,
+        netCents: 0,
+        discountCents: 0,
+      } satisfies SalesRow);
     if (e.grossCents >= 0) row.orders += 1; // refund rows (negative) net the sums but are not orders
     row.grossCents += e.grossCents;
     row.vatCents += e.vatCents;
@@ -156,7 +166,10 @@ async function salesByProduct(from: ISODate, to: ISODate): Promise<SalesRow[]> {
     }),
     prisma.invoiceLine.findMany({
       where: {
-        invoice: { status: { in: ['SENT', 'PARTIALLY_PAID', 'PAID'] }, issueDate: dateRange(from, to) },
+        invoice: {
+          status: { in: ['SENT', 'PARTIALLY_PAID', 'PAID'] },
+          issueDate: dateRange(from, to),
+        },
       },
       select: lineSelect,
     }),
@@ -164,10 +177,21 @@ async function salesByProduct(from: ISODate, to: ISODate): Promise<SalesRow[]> {
   const map = new Map<string, SalesRow>();
   const add = (l: ProductLine): void => {
     const key = l.productId !== null ? `product:${l.productId}` : 'product:none';
-    const label = l.product ? `${l.product.nameEn} (${l.product.sku})` : 'Custom lines (no product)';
+    const label = l.product
+      ? `${l.product.nameEn} (${l.product.sku})`
+      : 'Custom lines (no product)';
     const row =
       map.get(key) ??
-      ({ key, label, orders: 0, qty: 0, grossCents: 0, vatCents: 0, netCents: 0, discountCents: 0 } satisfies SalesRow);
+      ({
+        key,
+        label,
+        orders: 0,
+        qty: 0,
+        grossCents: 0,
+        vatCents: 0,
+        netCents: 0,
+        discountCents: 0,
+      } satisfies SalesRow);
     row.orders += 1;
     row.qty = round2((row.qty ?? 0) + Number(l.qty));
     row.grossCents += l.lineGrossCents;
@@ -181,8 +205,15 @@ async function salesByProduct(from: ISODate, to: ISODate): Promise<SalesRow[]> {
   return [...map.values()].sort((a, b) => b.grossCents - a.grossCents);
 }
 
-export async function salesReport(groupBy: SalesGroupBy, from: ISODate, to: ISODate): Promise<SalesReport> {
-  const rows = groupBy === 'product' ? await salesByProduct(from, to) : await salesFromEntries(groupBy, from, to);
+export async function salesReport(
+  groupBy: SalesGroupBy,
+  from: ISODate,
+  to: ISODate,
+): Promise<SalesReport> {
+  const rows =
+    groupBy === 'product'
+      ? await salesByProduct(from, to)
+      : await salesFromEntries(groupBy, from, to);
   const totals: SalesTotals = {
     orders: 0,
     qty: groupBy === 'product' ? 0 : null,
@@ -287,12 +318,17 @@ export async function pnlReport(from: ISODate, to: ISODate, modelId?: number): P
         },
       }),
       prisma.expense.findMany({
-        where: { status: 'ACTIVE', OR: [{ expenseDate: null }, { expenseDate: dateRange(from, to) }] },
+        where: {
+          status: 'ACTIVE',
+          OR: [{ expenseDate: null }, { expenseDate: dateRange(from, to) }],
+        },
         select: { grossCents: true, category: { select: { nameEn: true } } },
       }),
       salariesInPeriod(from, to),
       unitPurchasesInPeriod(from, to),
-      getSetting<{ countUnitPurchasesAsCost?: boolean }>('pnl', { countUnitPurchasesAsCost: false }),
+      getSetting<{ countUnitPurchasesAsCost?: boolean }>('pnl', {
+        countUnitPurchasesAsCost: false,
+      }),
       taxRateOn(to),
       modelId !== undefined
         ? prisma.businessModel.findUnique({
@@ -323,7 +359,8 @@ export async function pnlReport(from: ISODate, to: ISODate, modelId?: number): P
   unitPurchasesCents += unitPurchaseExpensesCents;
 
   const countUnitPurchases = pnlSettings.countUnitPurchasesAsCost ?? false;
-  const costsCountedCents = expensesCents + salariesCents + (countUnitPurchases ? unitPurchasesCents : 0);
+  const costsCountedCents =
+    expensesCents + salariesCents + (countUnitPurchases ? unitPurchasesCents : 0);
 
   // Per-model breakdown — always across ALL models of the period. Costs cannot be
   // assigned to one model, so model rows show gross margin and the shared costs
@@ -349,7 +386,9 @@ export async function pnlReport(from: ISODate, to: ISODate, modelId?: number): P
     row.profitCents = row.revenueNetCents; // gross margin only on model rows
     perModelMap.set(e.modelId, row);
   }
-  const perModel = [...perModelMap.values()].sort((a, b) => b.revenueGrossCents - a.revenueGrossCents);
+  const perModel = [...perModelMap.values()].sort(
+    (a, b) => b.revenueGrossCents - a.revenueGrossCents,
+  );
   perModel.push({
     model: { id: 0, code: 'ALL_MODELS', nameEn: 'All models', nameFi: 'Kaikki mallit' },
     revenueGrossCents: allGross,
@@ -484,19 +523,24 @@ export interface OutstandingReport {
 }
 
 export async function outstandingReport(): Promise<OutstandingReport> {
-  const entries = await prisma.entry.findMany({
-    where: { status: 'ACTIVE', paymentStatus: { in: ['INVOICED', 'PENDING'] } },
-    select: {
-      entryDate: true,
-      grossCents: true,
-      customerId: true,
-      customerName: true,
-      customer: { select: { name: true } },
-    },
-  });
+  const entries = await withBalances(
+    await prisma.entry.findMany({
+      where: { status: 'ACTIVE', paymentStatus: { in: [...OPEN_STATUSES] } },
+      select: {
+        id: true,
+        entryDate: true,
+        grossCents: true,
+        paymentStatus: true,
+        customerId: true,
+        customerName: true,
+        customer: { select: { name: true } },
+      },
+    }),
+  );
   const map = new Map<string, OutstandingRow>();
   let totalCents = 0;
-  for (const e of entries) {
+  // part-payments already received reduce what is still owed
+  for (const e of entries.filter((x) => x.outstandingCents !== 0)) {
     const key =
       e.customerId !== null
         ? `customer:${e.customerId}`
@@ -507,12 +551,18 @@ export async function outstandingReport(): Promise<OutstandingReport> {
       e.customer?.name ??
       (e.customerName && e.customerName.trim() !== '' ? e.customerName.trim() : 'Unknown customer');
     const date = iso(e.entryDate);
-    const row = map.get(key) ?? { customerId: e.customerId, customerName: name, items: 0, amountCents: 0, oldestDate: date };
+    const row = map.get(key) ?? {
+      customerId: e.customerId,
+      customerName: name,
+      items: 0,
+      amountCents: 0,
+      oldestDate: date,
+    };
     row.items += 1;
-    row.amountCents += e.grossCents;
+    row.amountCents += e.outstandingCents;
     if (date < row.oldestDate) row.oldestDate = date;
     map.set(key, row);
-    totalCents += e.grossCents;
+    totalCents += e.outstandingCents;
   }
   return { rows: [...map.values()].sort((a, b) => b.amountCents - a.amountCents), totalCents };
 }
@@ -607,14 +657,35 @@ export async function cashLedgerReport(from: ISODate, to: ISODate): Promise<Cash
       },
       orderBy: [{ date: 'desc' }, { id: 'desc' }],
     }),
-    prisma.moneyHolder.findMany({ where: { active: true }, orderBy: [{ sortOrder: 'asc' }, { id: 'asc' }] }),
-    prisma.payment.groupBy({ by: ['receivedById'], where: { status: 'ACTIVE' }, _sum: { amountCents: true } }),
-    prisma.cashHandover.groupBy({ by: ['fromHolderId'], where: { status: 'ACTIVE' }, _sum: { amountCents: true } }),
-    prisma.cashHandover.groupBy({ by: ['toHolderId'], where: { status: 'ACTIVE' }, _sum: { amountCents: true } }),
+    prisma.moneyHolder.findMany({
+      where: { active: true },
+      orderBy: [{ sortOrder: 'asc' }, { id: 'asc' }],
+    }),
+    prisma.payment.groupBy({
+      by: ['receivedById'],
+      where: { status: 'ACTIVE' },
+      _sum: { amountCents: true },
+    }),
+    prisma.cashHandover.groupBy({
+      by: ['fromHolderId'],
+      where: { status: 'ACTIVE' },
+      _sum: { amountCents: true },
+    }),
+    prisma.cashHandover.groupBy({
+      by: ['toHolderId'],
+      where: { status: 'ACTIVE' },
+      _sum: { amountCents: true },
+    }),
   ]);
-  const receivedBy = new Map<number, number>(paymentSums.map((r) => [r.receivedById, r._sum.amountCents ?? 0]));
-  const handedOverBy = new Map<number, number>(outSums.map((r) => [r.fromHolderId, r._sum.amountCents ?? 0]));
-  const handedInTo = new Map<number, number>(inSums.map((r) => [r.toHolderId, r._sum.amountCents ?? 0]));
+  const receivedBy = new Map<number, number>(
+    paymentSums.map((r) => [r.receivedById, r._sum.amountCents ?? 0]),
+  );
+  const handedOverBy = new Map<number, number>(
+    outSums.map((r) => [r.fromHolderId, r._sum.amountCents ?? 0]),
+  );
+  const handedInTo = new Map<number, number>(
+    inSums.map((r) => [r.toHolderId, r._sum.amountCents ?? 0]),
+  );
   const balances = holders.map((h) => {
     const holder = { id: h.id, name: h.name, kind: h.kind };
     if (h.kind === 'COMPANY') {
@@ -624,7 +695,12 @@ export async function cashLedgerReport(from: ISODate, to: ISODate): Promise<Cash
     }
     const receivedCents = receivedBy.get(h.id) ?? 0;
     const handedOverCents = handedOverBy.get(h.id) ?? 0;
-    return { holder, receivedCents, handedOverCents, holdingCents: receivedCents - handedOverCents };
+    return {
+      holder,
+      receivedCents,
+      handedOverCents,
+      holdingCents: receivedCents - handedOverCents,
+    };
   });
   return {
     from,
@@ -666,13 +742,23 @@ export async function zReportsReport(from: ISODate, to: ISODate): Promise<ZRepor
   const sales = await prisma.sale.findMany({
     // a sale refunded later still happened on its own day (refunds are reported separately)
     where: { status: { in: ['COMPLETED', 'REFUNDED'] }, businessDate: dateRange(from, to) },
-    select: { id: true, businessDate: true, totalGrossCents: true, totalVatCents: true, totalNetCents: true },
+    select: {
+      id: true,
+      businessDate: true,
+      totalGrossCents: true,
+      totalVatCents: true,
+      totalNetCents: true,
+    },
   });
   const payments =
     sales.length > 0
       ? await prisma.payment.findMany({
           // positive rows only: refund rows (negative) belong to the refund's day, not the sale's
-          where: { status: 'ACTIVE', saleId: { in: sales.map((s) => s.id) }, amountCents: { gt: 0 } },
+          where: {
+            status: 'ACTIVE',
+            saleId: { in: sales.map((s) => s.id) },
+            amountCents: { gt: 0 },
+          },
           select: { saleId: true, amountCents: true, method: { select: { name: true } } },
         })
       : [];
@@ -683,7 +769,14 @@ export async function zReportsReport(from: ISODate, to: ISODate): Promise<ZRepor
     const date = iso(s.businessDate);
     const row =
       rowsByDate.get(date) ??
-      ({ date, salesCount: 0, grossCents: 0, vatCents: 0, netCents: 0, byMethod: [] } satisfies ZReportRow);
+      ({
+        date,
+        salesCount: 0,
+        grossCents: 0,
+        vatCents: 0,
+        netCents: 0,
+        byMethod: [],
+      } satisfies ZReportRow);
     row.salesCount += 1;
     row.grossCents += s.totalGrossCents;
     row.vatCents += s.totalVatCents;

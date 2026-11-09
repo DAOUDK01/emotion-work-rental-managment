@@ -16,6 +16,7 @@ import {
 } from './schemas.js';
 import {
   businessIdValidity,
+  customerBalance,
   isoDate,
   isoDateOrNull,
   outstandingByCustomerIds,
@@ -182,6 +183,18 @@ customersRouter.get('/:id', validate({ params: CustomerIdParam }), async (req, r
       entries: entries.map((e) => ({ ...e, entryDate: isoDate(e.entryDate) })),
       outstandingCents,
     });
+  } catch (err) {
+    next(err);
+  }
+});
+
+// ---------- GET /customers/:id/balance → charged / received / owed by type + open items ----------
+customersRouter.get('/:id/balance', validate({ params: CustomerIdParam }), async (req, res, next) => {
+  try {
+    const { id } = req.params as unknown as { id: number };
+    const exists = await prisma.customer.findUnique({ where: { id }, select: { id: true } });
+    if (!exists) throw notFound('Customer');
+    res.json(await customerBalance(id));
   } catch (err) {
     next(err);
   }

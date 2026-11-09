@@ -37,7 +37,10 @@
     "pctInvalid": "Anna kokonaisluku väliltä 0–100",
     "partnerRequired": "Valitse osakas tai vaihda yhteiseksi",
     "reasonRequired": "Syy on pakollinen",
-    "tooLong": "Teksti on liian pitkä"
+    "tooLong": "Teksti on liian pitkä",
+    "paidNowInvalid": "Anna kelvollinen summa",
+    "paidNowTooHigh": "Nyt maksettu ei voi olla kokonaissummaa suurempi",
+    "receivedByForPaidNow": "Valitse, kuka vastaanotti nyt maksetun summan"
   },
   "pickers": {
     "unitPlaceholder": "Hae yksikön tunnuksella, merkillä tai mallilla…",
@@ -79,7 +82,9 @@
       "paidBack": "Yksikkö {{code}} on maksanut itsensä takaisin — tähän mennessä ansaittu {{earned}}.",
       "paybackNoCost": "Yksikkö {{code}} on ansainnut tähän mennessä {{earned}} (ostohintaa ei ole kirjattu).",
       "needsReview": "Tämä kirjaus merkittiin tarkistettavaksi."
-    }
+    },
+    "paidNow": "Maksettu nyt",
+    "paidNowHint": "Jätä tyhjäksi, jos mitään ei ole vielä maksettu. Loput jää asiakkaan maksettavaksi."
   },
   "expense": {
     "selectCategory": "Valitse luokka…",
@@ -163,7 +168,9 @@
     "expenseGross": "Maksettu summa",
     "vatInPrice": "ALV hinnassa",
     "reclaimable": "Vähennettävä ALV",
-    "costAfterReclaim": "Kustannus vähennyksen jälkeen"
+    "costAfterReclaim": "Kustannus vähennyksen jälkeen",
+    "paidNow": "Maksettu nyt",
+    "stillOwed": "Vielä maksamatta"
   },
   "latest": {
     "title": "Viimeisimmät kirjaukset",

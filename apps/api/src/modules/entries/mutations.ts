@@ -4,7 +4,8 @@ import { badRequest, conflict, notFound } from '../../errors.js';
 import { currentUserId } from '../../context.js';
 import { audit } from '../../services/audit.js';
 import { voidEntry, type Tx } from '../../services/entries.js';
-import type { MarkPaidBody, UpdateEntryBody } from './schemas.js';
+import { isOpenStatus, paidCentsByEntryIds } from '../../services/balances.js';
+import type { MarkPaidBody, RecordPaymentBody, UpdateEntryBody } from './schemas.js';
 import {
   assertRefs,
   getEntryWithRefs,
@@ -52,7 +53,9 @@ interface SyncPaymentsArgs {
  * Keep the money-received ledger in step with the entry's payment status
  * (same rules as the rentals module):
  *  - PAID with no ACTIVE payment  -> create one against "Amount received by"
+ *  - open -> PAID after part-payments -> create one payment for the remainder only
  *  - PAID with an ACTIVE payment  -> update amount / receiver / method in place
+ *    (paid in several parts: only the last instalment absorbs an amount change)
  *  - leaving PAID                 -> void the ACTIVE payment rows (never hard-delete)
  */
 async function syncPayments(tx: Tx, args: SyncPaymentsArgs): Promise<void> {
@@ -62,7 +65,10 @@ async function syncPayments(tx: Tx, args: SyncPaymentsArgs): Promise<void> {
   });
   if (args.paymentStatus === 'PAID') {
     if (!args.receivedById) {
-      throw badRequest('RECEIVED_BY_REQUIRED', '"Amount received by" is required for received money');
+      throw badRequest(
+        'RECEIVED_BY_REQUIRED',
+        '"Amount received by" is required for received money',
+      );
     }
     if (active.length === 0) {
       await tx.payment.create({
@@ -75,7 +81,30 @@ async function syncPayments(tx: Tx, args: SyncPaymentsArgs): Promise<void> {
           createdById: currentUserId() ?? null,
         },
       });
-    } else {
+    } else if (args.previousStatus !== 'PAID') {
+      // Part-paid entry becomes fully paid: book only the remainder; the earlier
+      // instalments keep their own receiver, method and date.
+      const received = active.reduce((acc, p) => acc + p.amountCents, 0);
+      const remainder = args.grossCents - received;
+      if (remainder < 0) {
+        throw badRequest(
+          'AMOUNT_BELOW_PAID',
+          'More money was already received than the amount of this entry',
+        );
+      }
+      if (remainder > 0) {
+        await tx.payment.create({
+          data: {
+            date: toDbDate(args.paymentDate),
+            amountCents: remainder,
+            methodId: args.paymentMethodId,
+            receivedById: args.receivedById,
+            entryId: args.entryId,
+            createdById: currentUserId() ?? null,
+          },
+        });
+      }
+    } else if (active.length === 1) {
       await tx.payment.update({
         where: { id: active[0].id },
         data: {
@@ -84,6 +113,21 @@ async function syncPayments(tx: Tx, args: SyncPaymentsArgs): Promise<void> {
           methodId: args.paymentMethodId,
         },
       });
+    } else {
+      // Paid in parts: earlier instalments stay as received; only the last one absorbs
+      // an amount change so the payments still add up to the entry total.
+      const last = active[active.length - 1];
+      const earlier = active.slice(0, -1).reduce((acc, p) => acc + p.amountCents, 0);
+      const lastAmount = args.grossCents - earlier;
+      if (lastAmount <= 0) {
+        throw badRequest(
+          'AMOUNT_BELOW_PAID',
+          'The new amount is not more than what was already received in earlier part-payments',
+        );
+      }
+      if (lastAmount !== last.amountCents) {
+        await tx.payment.update({ where: { id: last.id }, data: { amountCents: lastAmount } });
+      }
     }
   } else if (args.previousStatus === 'PAID' && active.length > 0) {
     await tx.payment.updateMany({
@@ -160,6 +204,21 @@ export async function updateEntry(id: number, body: UpdateEntryBody): Promise<En
     throw badRequest('RECEIVED_BY_REQUIRED', '"Amount received by" is required for received money');
   }
   const vat = incomeVat(grossCents, vatRateBp, vatInvoice);
+
+  // A part-paid entry that stays open cannot drop below what was already received.
+  if (
+    paymentStatus !== 'PAID' &&
+    before.paymentStatus === paymentStatus &&
+    isOpenStatus(paymentStatus)
+  ) {
+    const paidSoFar = (await paidCentsByEntryIds([id])).get(id) ?? 0;
+    if (paidSoFar > grossCents) {
+      throw badRequest(
+        'AMOUNT_BELOW_PAID',
+        `The amount cannot be lower than the ${(paidSoFar / 100).toFixed(2)} € already received`,
+      );
+    }
+  }
 
   const updated = await prisma.$transaction(async (tx) => {
     // Validate only the references the caller actually changed.
@@ -279,7 +338,8 @@ export async function voidEntryById(id: number, reason: string): Promise<EntryWi
 export async function markEntryPaid(id: number, body: MarkPaidBody): Promise<EntryWithRefs> {
   const before = await prisma.entry.findUnique({ where: { id } });
   if (!before) throw notFound('Entry');
-  if (before.status === 'VOID') throw conflict('ENTRY_VOID', 'A voided entry cannot be marked paid');
+  if (before.status === 'VOID')
+    throw conflict('ENTRY_VOID', 'A voided entry cannot be marked paid');
   if (before.saleId !== null || before.invoiceId !== null) {
     throw conflict(
       'LINKED_ENTRY',
@@ -315,6 +375,81 @@ export async function markEntryPaid(id: number, body: MarkPaidBody): Promise<Ent
     return entry;
   });
 
+  await audit('UPDATE', 'entries', id, before, updated);
+  return getEntryWithRefs(id);
+}
+
+// ------------------------------------------------------------------
+// record payment — part (or all) of the money still owed on an open entry
+// ------------------------------------------------------------------
+
+/**
+ * A customer pays part of an open item (e.g. €100 of a €125 tyre change now, €25
+ * next week). Each instalment is its own Payment against "Amount received by";
+ * the entry turns PAID once the instalments cover the whole amount.
+ * Invoice-linked entries take payments on the invoice (POST /invoices/:id/payments).
+ */
+export async function recordEntryPayment(
+  id: number,
+  body: RecordPaymentBody,
+): Promise<EntryWithRefs> {
+  const before = await prisma.entry.findUnique({ where: { id } });
+  if (!before) throw notFound('Entry');
+  if (before.status === 'VOID') throw conflict('ENTRY_VOID', 'A voided entry cannot take payments');
+  if (before.saleId !== null || before.invoiceId !== null) {
+    throw conflict(
+      'LINKED_ENTRY',
+      'This entry belongs to a sale or an invoice — record the payment there',
+    );
+  }
+  if (!isOpenStatus(before.paymentStatus)) {
+    throw conflict(
+      before.paymentStatus === 'PAID' ? 'ALREADY_PAID' : 'NOT_BILLED',
+      before.paymentStatus === 'PAID'
+        ? 'Entry is already fully paid'
+        : 'Entry is not billed yet — set it to pending or invoiced first',
+    );
+  }
+
+  const paymentDate = body.date ?? todayInHelsinki();
+  const paymentMethodId = body.paymentMethodId ?? null;
+
+  let paymentId = 0;
+  const updated = await prisma.$transaction(async (tx) => {
+    await assertRefs(tx, {
+      receivedById: body.receivedById,
+      paymentMethodId: body.paymentMethodId,
+    });
+    const paidSoFar = (await paidCentsByEntryIds([id], tx)).get(id) ?? 0;
+    const remaining = before.grossCents - paidSoFar;
+    if (body.amountCents > remaining) {
+      throw badRequest(
+        'OVERPAYMENT',
+        `The payment is more than the ${(remaining / 100).toFixed(2)} € still owed on this entry`,
+        { remainingCents: remaining },
+      );
+    }
+    const payment = await tx.payment.create({
+      data: {
+        date: toDbDate(paymentDate),
+        amountCents: body.amountCents,
+        methodId: paymentMethodId,
+        receivedById: body.receivedById,
+        entryId: id,
+        createdById: currentUserId() ?? null,
+      },
+    });
+    paymentId = payment.id;
+    const fullyPaid = body.amountCents === remaining;
+    return tx.entry.update({
+      where: { id },
+      data: fullyPaid
+        ? { paymentStatus: 'PAID', receivedById: body.receivedById, paymentMethodId }
+        : {},
+    });
+  });
+
+  await audit('CREATE', 'payments', paymentId, undefined, { entryId: id, ...body });
   await audit('UPDATE', 'entries', id, before, updated);
   return getEntryWithRefs(id);
 }

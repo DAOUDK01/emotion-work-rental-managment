@@ -52,6 +52,8 @@ export const CreateEntrySchema = z.object({
   labourCents: z.number().int().min(0).nullish(),
   partsCents: z.number().int().min(0).nullish(),
   paymentStatus: z.enum(PAYMENT_STATUS),
+  /** Part-payment received now on a PENDING/INVOICED entry (cents); the rest stays owed. */
+  paidNowCents: z.number().int().min(0).nullish(),
   paymentMethodId: z.number().int().positive().nullish(),
   receivedById: z.number().int().positive().nullish(),
   needsReview: z.boolean().optional(),
@@ -59,8 +61,9 @@ export const CreateEntrySchema = z.object({
 });
 export type CreateEntryBody = z.infer<typeof CreateEntrySchema>;
 
-/** PUT body: any subset of the POST fields. undefined = keep, null = clear (nullable fields). */
-export const UpdateEntrySchema = CreateEntrySchema.partial();
+/** PUT body: any subset of the POST fields. undefined = keep, null = clear (nullable fields).
+ *  Part-payments after creation go through POST /entries/:id/payments, not PUT. */
+export const UpdateEntrySchema = CreateEntrySchema.omit({ paidNowCents: true }).partial();
 export type UpdateEntryBody = z.infer<typeof UpdateEntrySchema>;
 
 export const VoidEntrySchema = z.object({ reason: z.string().trim().min(1).max(500) });
@@ -73,6 +76,16 @@ export const MarkPaidSchema = z.object({
   date: isoDate.optional(),
 });
 export type MarkPaidBody = z.infer<typeof MarkPaidSchema>;
+
+/** POST /entries/:id/payments — record (part of) the money still owed on an open entry. */
+export const RecordPaymentSchema = z.object({
+  amountCents: z.number().int().positive(),
+  receivedById: z.number().int().positive(),
+  paymentMethodId: z.number().int().positive().nullish(),
+  /** Day the money arrived; defaults to today (Europe/Helsinki). */
+  date: isoDate.optional(),
+});
+export type RecordPaymentBody = z.infer<typeof RecordPaymentSchema>;
 
 /**
  * Live form preview — pure computation, no DB writes.

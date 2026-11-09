@@ -262,7 +262,10 @@ export async function createRental(
     return rental.id;
   });
 
-  const created = await prisma.rental.findUnique({ where: { id: rentalId }, include: { entry: true } });
+  const created = await prisma.rental.findUnique({
+    where: { id: rentalId },
+    include: { entry: true },
+  });
   await audit('CREATE', 'rentals', rentalId, undefined, created);
   return rentalId;
 }
@@ -281,8 +284,18 @@ export async function updateRental(id: number, body: UpdateRentalBody): Promise<
   // (payments, credit notes). Descriptive fields stay editable.
   if (entry?.invoiceId != null) {
     const financial = [
-      'unitId', 'customerId', 'customerName', 'startDate', 'amountCents', 'discountCents',
-      'discountReason', 'vatInvoice', 'vatRateBp', 'paymentStatus', 'paymentMethodId', 'receivedById',
+      'unitId',
+      'customerId',
+      'customerName',
+      'startDate',
+      'amountCents',
+      'discountCents',
+      'discountReason',
+      'vatInvoice',
+      'vatRateBp',
+      'paymentStatus',
+      'paymentMethodId',
+      'receivedById',
     ] as const;
     const touched = financial.filter((k) => (body as Record<string, unknown>)[k] !== undefined);
     if (touched.length > 0) {
@@ -303,7 +316,8 @@ export async function updateRental(id: number, body: UpdateRentalBody): Promise<
   const origEnd = rental.endDate ? fromDbDate(rental.endDate) : null;
   const startDate = body.startDate ?? origStart;
   const endDate = body.endDate === undefined ? origEnd : body.endDate;
-  if (endDate && endDate < startDate) throw badRequest('BAD_PERIOD', 'End date is before start date');
+  if (endDate && endDate < startDate)
+    throw badRequest('BAD_PERIOD', 'End date is before start date');
   const datesChanged = startDate !== origStart || endDate !== origEnd;
 
   const customerId = body.customerId === undefined ? rental.customerId : body.customerId;
@@ -410,7 +424,10 @@ export async function updateRental(id: number, body: UpdateRentalBody): Promise<
       });
       if (paymentStatus === 'PAID') {
         if (!receivedById) {
-          throw badRequest('RECEIVED_BY_REQUIRED', '"Amount received by" is required for received money');
+          throw badRequest(
+            'RECEIVED_BY_REQUIRED',
+            '"Amount received by" is required for received money',
+          );
         }
         if (activePayments.length === 0) {
           await tx.payment.create({
@@ -423,10 +440,46 @@ export async function updateRental(id: number, body: UpdateRentalBody): Promise<
               createdById: currentUserId() ?? null,
             },
           });
-        } else {
+        } else if (entry.paymentStatus !== 'PAID') {
+          // part-paid rental becomes fully paid: book only the remainder
+          const received = activePayments.reduce((acc, p) => acc + p.amountCents, 0);
+          const remainder = grossCents - received;
+          if (remainder < 0) {
+            throw badRequest(
+              'AMOUNT_BELOW_PAID',
+              'More money was already received than the amount of this rental',
+            );
+          }
+          if (remainder > 0) {
+            await tx.payment.create({
+              data: {
+                date: toDbDate(todayInHelsinki()),
+                amountCents: remainder,
+                methodId: paymentMethodId,
+                receivedById,
+                entryId: entry.id,
+                createdById: currentUserId() ?? null,
+              },
+            });
+          }
+        } else if (activePayments.length === 1) {
           await tx.payment.update({
             where: { id: activePayments[0].id },
             data: { amountCents: grossCents, receivedById, methodId: paymentMethodId },
+          });
+        } else {
+          // paid in parts: only the last instalment absorbs an amount change
+          const last = activePayments[activePayments.length - 1];
+          const earlier = activePayments.slice(0, -1).reduce((acc, p) => acc + p.amountCents, 0);
+          if (grossCents - earlier <= 0) {
+            throw badRequest(
+              'AMOUNT_BELOW_PAID',
+              'The new amount is not more than the part-payments already received',
+            );
+          }
+          await tx.payment.update({
+            where: { id: last.id },
+            data: { amountCents: grossCents - earlier },
           });
         }
       } else if (entry.paymentStatus === 'PAID') {
@@ -475,7 +528,10 @@ export async function voidRental(id: number, reason: string): Promise<void> {
   if (!rental) throw notFound('Rental');
   if (rental.status === 'VOID') throw conflict('ALREADY_VOID', 'Rental is already voided');
   if (rental.entry?.invoiceId != null && rental.entry.status === 'ACTIVE') {
-    throw conflict('LINKED_ENTRY', 'This rental is invoiced — cancel it with a credit note on the invoice');
+    throw conflict(
+      'LINKED_ENTRY',
+      'This rental is invoiced — cancel it with a credit note on the invoice',
+    );
   }
 
   await prisma.$transaction(async (tx) => {
@@ -489,10 +545,7 @@ export async function voidRental(id: number, reason: string): Promise<void> {
 
 // ---------------------------------------------------------------- generate next period
 
-export async function generateNextRental(
-  id: number,
-  source: 'WEB' | 'SYSTEM',
-): Promise<number> {
+export async function generateNextRental(id: number, source: 'WEB' | 'SYSTEM'): Promise<number> {
   const original = await prisma.rental.findUnique({
     where: { id },
     include: { entry: true, unit: true },
@@ -572,7 +625,10 @@ export async function generateNextRental(
     return rental.id;
   });
 
-  const created = await prisma.rental.findUnique({ where: { id: createdId }, include: { entry: true } });
+  const created = await prisma.rental.findUnique({
+    where: { id: createdId },
+    include: { entry: true },
+  });
   await audit('CREATE', 'rentals', createdId, undefined, created);
   return createdId;
 }

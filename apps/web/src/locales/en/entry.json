@@ -37,7 +37,10 @@
     "pctInvalid": "Enter a whole number from 0 to 100",
     "partnerRequired": "Choose the partner, or switch to Joint",
     "reasonRequired": "A reason is required",
-    "tooLong": "This text is too long"
+    "tooLong": "This text is too long",
+    "paidNowInvalid": "Enter a valid amount",
+    "paidNowTooHigh": "Paid now cannot be more than the total",
+    "receivedByForPaidNow": "Choose who received the money paid now"
   },
   "pickers": {
     "unitPlaceholder": "Search by unit ID, brand or model…",
@@ -79,7 +82,9 @@
       "paidBack": "Unit {{code}} has paid itself back — {{earned}} earned so far.",
       "paybackNoCost": "Unit {{code}} has earned {{earned}} so far (no purchase price recorded).",
       "needsReview": "This entry was flagged for review."
-    }
+    },
+    "paidNow": "Paid now",
+    "paidNowHint": "Leave empty if nothing was paid yet. The rest stays owed by the customer."
   },
   "expense": {
     "selectCategory": "Choose category…",
@@ -163,7 +168,9 @@
     "expenseGross": "Amount paid",
     "vatInPrice": "VAT in price",
     "reclaimable": "Reclaimable VAT",
-    "costAfterReclaim": "Cost after reclaim"
+    "costAfterReclaim": "Cost after reclaim",
+    "paidNow": "Paid now",
+    "stillOwed": "Still owed"
   },
   "latest": {
     "title": "Latest entries",

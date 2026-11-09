@@ -258,6 +258,7 @@ export async function createQuickEntry(
       labourCents: input.labourCents ?? null,
       partsCents: input.partsCents ?? null,
       paymentStatus: input.paymentStatus,
+      paidNowCents: input.paidNowCents ?? null,
       paymentMethodId: input.paymentMethodId ?? null,
       receivedById: input.receivedById ?? null,
       source: 'WEB',

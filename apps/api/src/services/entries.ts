@@ -33,6 +33,12 @@ export interface CreateEntryInput {
   labourCents?: number | null;
   partsCents?: number | null;
   paymentStatus: 'PAID' | 'INVOICED' | 'PENDING' | 'NOT_YET_BILLED';
+  /**
+   * Part-payment received at once on an open (PENDING / INVOICED) entry, in cents.
+   * Booked as a Payment against "Amount received by"; the rest stays outstanding.
+   * Paying the full amount turns the entry PAID.
+   */
+  paidNowCents?: number | null;
   paymentMethodId?: number | null;
   receivedById?: number | null;
   source: 'POS' | 'WEB' | 'WHATSAPP' | 'IMPORT' | 'SYSTEM';
@@ -52,8 +58,24 @@ export async function createEntry(tx: Tx, input: CreateEntryInput) {
   if (grossAfterDiscount < 0) {
     throw badRequest('DISCOUNT_EXCEEDS_AMOUNT', 'Discount is larger than the amount');
   }
+  // Part-payment now: only on open entries, between 0 and the amount after discount.
+  let paymentStatus = input.paymentStatus;
+  let paidNowCents = input.paidNowCents ?? 0;
+  if (paidNowCents < 0) throw badRequest('BAD_PAID_NOW', 'The amount paid now cannot be negative');
+  if (paidNowCents > 0) {
+    if (paymentStatus !== 'PENDING' && paymentStatus !== 'INVOICED') {
+      throw badRequest('BAD_PAID_NOW', 'A part-payment can only be recorded on an unpaid (pending or invoiced) entry');
+    }
+    if (paidNowCents > grossAfterDiscount) {
+      throw badRequest('PAID_NOW_EXCEEDS_AMOUNT', 'The amount paid now is more than the total');
+    }
+    if (paidNowCents === grossAfterDiscount) {
+      paymentStatus = 'PAID'; // everything received after all
+      paidNowCents = 0;
+    }
+  }
   // Every income needs "Amount received by" when money was actually received.
-  if (input.paymentStatus === 'PAID' && !input.receivedById) {
+  if ((paymentStatus === 'PAID' || paidNowCents > 0) && !input.receivedById) {
     throw badRequest('RECEIVED_BY_REQUIRED', '"Amount received by" is required for received money');
   }
 
@@ -83,7 +105,7 @@ export async function createEntry(tx: Tx, input: CreateEntryInput) {
       netCents: vat.netCents,
       labourCents: input.labourCents ?? null,
       partsCents: input.partsCents ?? null,
-      paymentStatus: input.paymentStatus,
+      paymentStatus,
       paymentMethodId: input.paymentMethodId ?? null,
       receivedById: input.receivedById ?? null,
       segment,
@@ -114,11 +136,13 @@ export async function createEntry(tx: Tx, input: CreateEntryInput) {
   }
 
   // Money actually received -> ledger row for the holder ("no escape point").
-  if (input.paymentStatus === 'PAID' && input.receivedById) {
+  // A part-payment books only what was received now; the rest stays outstanding.
+  const receivedNowCents = paymentStatus === 'PAID' ? grossAfterDiscount : paidNowCents;
+  if ((paymentStatus === 'PAID' || receivedNowCents > 0) && input.receivedById) {
     await tx.payment.create({
       data: {
         date: entry.entryDate,
-        amountCents: grossAfterDiscount,
+        amountCents: receivedNowCents,
         methodId: input.paymentMethodId ?? null,
         receivedById: input.receivedById,
         entryId: entry.id,

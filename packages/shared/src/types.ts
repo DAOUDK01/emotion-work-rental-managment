@@ -7,6 +7,7 @@ export const MODEL_CODES = {
   REPAIR: 'REPAIR',
   SPARE_PARTS: 'SPARE_PARTS',
   UNIT_SALES: 'UNIT_SALES',
+  MISC: 'MISC',
   CONTRACT: 'CONTRACT',
 } as const;
 export type ModelCode = (typeof MODEL_CODES)[keyof typeof MODEL_CODES];
@@ -16,7 +17,8 @@ export const DEFAULT_MODELS: Array<{ code: ModelCode; nameEn: string; nameFi: st
   { code: 'REPAIR', nameEn: 'Repair & maintenance', nameFi: 'Korjaus ja huolto', sortOrder: 2 },
   { code: 'SPARE_PARTS', nameEn: 'Spare parts', nameFi: 'Varaosat', sortOrder: 3 },
   { code: 'UNIT_SALES', nameEn: 'Unit sales', nameFi: 'Laitemyynti', sortOrder: 4 },
-  { code: 'CONTRACT', nameEn: 'Contract work', nameFi: 'Sopimustyöt', sortOrder: 5 },
+  { code: 'MISC', nameEn: 'Miscellaneous', nameFi: 'Muut', sortOrder: 5 },
+  { code: 'CONTRACT', nameEn: 'Contract work', nameFi: 'Sopimustyöt', sortOrder: 6 },
 ];
 
 export const DEFAULT_RECEIVED_BY = ['Ahmed', 'Salman', 'Company Account', 'Cash'] as const;

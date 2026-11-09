@@ -10,12 +10,14 @@ import {
   ListEntriesQuerySchema,
   MarkPaidSchema,
   PreviewQuerySchema,
+  RecordPaymentSchema,
   UpdateEntrySchema,
   VoidEntrySchema,
   type CreateEntryBody,
   type ListEntriesQuery,
   type MarkPaidBody,
   type PreviewQuery,
+  type RecordPaymentBody,
   type UpdateEntryBody,
   type VoidEntryBody,
 } from './schemas.js';
@@ -26,7 +28,7 @@ import {
   serializeEntry,
   type UnitPayback,
 } from './service.js';
-import { markEntryPaid, updateEntry, voidEntryById } from './mutations.js';
+import { markEntryPaid, recordEntryPayment, updateEntry, voidEntryById } from './mutations.js';
 
 /**
  * /entries — the quick-entry backbone of the income ledger.
@@ -145,6 +147,22 @@ entriesRouter.post(
       const { id } = req.params as unknown as { id: number };
       const body = req.body as MarkPaidBody;
       res.json({ entry: serializeEntry(await markEntryPaid(id, body)) });
+    } catch (err) {
+      next(err);
+    }
+  },
+);
+
+// ---------- POST /entries/:id/payments → part (or all) of the money still owed ----------
+entriesRouter.post(
+  '/:id/payments',
+  requireAuth('ADMIN', 'STAFF'),
+  validate({ params: idParam, body: RecordPaymentSchema }),
+  async (req, res, next) => {
+    try {
+      const { id } = req.params as unknown as { id: number };
+      const body = req.body as RecordPaymentBody;
+      res.status(201).json({ entry: serializeEntry(await recordEntryPayment(id, body)) });
     } catch (err) {
       next(err);
     }

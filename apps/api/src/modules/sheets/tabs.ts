@@ -1,7 +1,14 @@
 import type { Prisma } from '@prisma/client';
-import { endOfMonth, monthKey, paybackPct, startOfMonth, todayInHelsinki } from '@emotionfix/shared';
+import {
+  endOfMonth,
+  monthKey,
+  paybackPct,
+  startOfMonth,
+  todayInHelsinki,
+} from '@emotionfix/shared';
 import { prisma } from '../../db.js';
 import { getSetting } from '../../services/settings.js';
+import { OPEN_STATUSES, withBalances } from '../../services/balances.js';
 
 /**
  * Builds the data pushed to the Google Sheets mirror — one TabData per spreadsheet tab.
@@ -282,7 +289,10 @@ async function buildUnitsTab(): Promise<TabData> {
       for (const m of movements) {
         if (m.unitId === null) continue;
         const costPerPiece = m.unitCostCents ?? m.product.costCents ?? 0;
-        partsByUnit.set(m.unitId, (partsByUnit.get(m.unitId) ?? 0) + Math.abs(m.qty) * costPerPiece);
+        partsByUnit.set(
+          m.unitId,
+          (partsByUnit.get(m.unitId) ?? 0) + Math.abs(m.qty) * costPerPiece,
+        );
       }
     }
   }
@@ -426,10 +436,13 @@ async function collectKpis(range?: { gte: Date; lte: Date }): Promise<KpiTotals>
       where: { ...entryWhere, paymentStatus: 'PAID' },
       _sum: { grossCents: true },
     }),
-    prisma.entry.aggregate({
-      where: { ...entryWhere, paymentStatus: { in: ['INVOICED', 'PENDING'] } },
-      _sum: { grossCents: true },
-    }),
+    // open items with their part-payments (received part vs. still owed)
+    prisma.entry
+      .findMany({
+        where: { ...entryWhere, paymentStatus: { in: [...OPEN_STATUSES] } },
+        select: { id: true, grossCents: true, paymentStatus: true },
+      })
+      .then((rows) => withBalances(rows)),
     prisma.entry.aggregate({
       where: { ...entryWhere, vatInvoice: false },
       _sum: { grossCents: true },
@@ -443,8 +456,9 @@ async function collectKpis(range?: { gte: Date; lte: Date }): Promise<KpiTotals>
   ]);
   return {
     totalSalesCents: entries._sum.grossCents ?? 0,
-    receivedCents: paid._sum.grossCents ?? 0,
-    outstandingCents: outstanding._sum.grossCents ?? 0,
+    receivedCents:
+      (paid._sum.grossCents ?? 0) + outstanding.reduce((a, e) => a + e.receivedCents, 0),
+    outstandingCents: outstanding.reduce((a, e) => a + e.outstandingCents, 0),
     netCents: entries._sum.netCents ?? 0,
     vatCents: entries._sum.vatCents ?? 0,
     nonVatCents: nonVat._sum.grossCents ?? 0,

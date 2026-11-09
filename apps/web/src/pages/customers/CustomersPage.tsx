@@ -1,17 +1,31 @@
-﻿import { useEffect, useMemo, useState } from 'react';
+﻿import { Fragment, useEffect, useMemo, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
-import { UserPlus } from 'lucide-react';
+import { ChevronDown, ChevronRight, UserPlus } from 'lucide-react';
 import { api, qs } from '@/lib/api';
 import { useAuth } from '@/lib/auth';
 import { fmtEUR, fmtNumber } from '@/lib/format';
 import { Button } from '@/components/ui/button';
 import { Input, Select } from '@/components/ui/input';
-import { Badge, EmptyState, ErrorState, LoadingState, PageHeader, Segmented } from '@/components/ui/misc';
+import {
+  Badge,
+  EmptyState,
+  ErrorState,
+  LoadingState,
+  PageHeader,
+  Segmented,
+} from '@/components/ui/misc';
 import { Table, TBody, TD, TDMoney, TH, THead, TR } from '@/components/ui/table';
+import { CustomerBalance } from './CustomerBalance';
 import CustomerDetailDrawer from './CustomerDetailDrawer';
 import CustomerFormDialog from './CustomerFormDialog';
-import { CUSTOMER_TYPES, hasPhoneField, type Customer, type CustomerListResponse, type CustomerType } from './types';
+import {
+  CUSTOMER_TYPES,
+  hasPhoneField,
+  type Customer,
+  type CustomerListResponse,
+  type CustomerType,
+} from './types';
 
 const PAGE_SIZE = 50;
 
@@ -29,6 +43,15 @@ export default function CustomersPage() {
   const [page, setPage] = useState(1);
 
   const [detailId, setDetailId] = useState<number | null>(null);
+  // customers whose "by type" dropdown is open
+  const [expanded, setExpanded] = useState<Set<number>>(() => new Set());
+  const toggle = (id: number) =>
+    setExpanded((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
   const [formOpen, setFormOpen] = useState(false);
   const [editing, setEditing] = useState<Customer | null>(null);
 
@@ -158,51 +181,85 @@ export default function CustomersPage() {
               <TH>{t('table.email')}</TH>
               {showPhone ? <TH>{t('table.phone')}</TH> : null}
               <TH className="text-right">{t('table.outstanding')}</TH>
-              <TH className="text-right">{t('table.rentals')}</TH>
+              <TH className="text-right">{t('table.byType')}</TH>
               <TH className="text-right">{t('table.invoices')}</TH>
             </TR>
           </THead>
           <TBody>
             {rows.map((c) => (
-              <TR
-                key={c.id}
-                tabIndex={0}
-                className="cursor-pointer focus-visible:bg-muted/60 focus-visible:outline-none"
-                onClick={() => setDetailId(c.id)}
-                onKeyDown={(e) => {
-                  if (e.key === 'Enter' || e.key === ' ') {
-                    e.preventDefault();
-                    setDetailId(c.id);
-                  }
-                }}
-                aria-label={t('table.open', { name: c.name })}
-              >
-                <TD>
-                  <div className="flex flex-wrap items-center gap-1.5">
-                    <span className="font-medium">{c.name}</span>
-                    {c.archived ? <Badge variant="default">{t('detail.archived')}</Badge> : null}
-                  </div>
-                  {c.businessId ? (
-                    <span className="block text-2xs text-muted-foreground tabular-nums">
-                      {t('table.businessIdShort')} {c.businessId}
+              <Fragment key={c.id}>
+                <TR
+                  tabIndex={0}
+                  className="cursor-pointer focus-visible:bg-muted/60 focus-visible:outline-none"
+                  onClick={() => setDetailId(c.id)}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter' || e.key === ' ') {
+                      e.preventDefault();
+                      setDetailId(c.id);
+                    }
+                  }}
+                  aria-label={t('table.open', { name: c.name })}
+                >
+                  <TD>
+                    <div className="flex flex-wrap items-center gap-1.5">
+                      <span className="font-medium">{c.name}</span>
+                      {c.archived ? <Badge variant="default">{t('detail.archived')}</Badge> : null}
+                    </div>
+                    {c.businessId ? (
+                      <span className="block text-2xs text-muted-foreground tabular-nums">
+                        {t('table.businessIdShort')} {c.businessId}
+                      </span>
+                    ) : null}
+                  </TD>
+                  <TD>
+                    <Badge variant={c.type === 'BUSINESS' ? 'navy' : 'default'}>
+                      {t(`type.${c.type}`)}
+                    </Badge>
+                  </TD>
+                  <TD className="max-w-[14rem]">
+                    <span className="block truncate" title={c.email ?? undefined}>
+                      {c.email ?? '–'}
                     </span>
-                  ) : null}
-                </TD>
-                <TD>
-                  <Badge variant={c.type === 'BUSINESS' ? 'navy' : 'default'}>{t(`type.${c.type}`)}</Badge>
-                </TD>
-                <TD className="max-w-[14rem]">
-                  <span className="block truncate" title={c.email ?? undefined}>
-                    {c.email ?? '–'}
-                  </span>
-                </TD>
-                {showPhone ? <TD className="whitespace-nowrap">{c.phone ?? '–'}</TD> : null}
-                <TDMoney className={c.outstandingCents > 0 ? 'font-semibold text-loss' : undefined}>
-                  {fmtEUR(c.outstandingCents)}
-                </TDMoney>
-                <TD className="text-right tabular-nums">{c.rentalCount}</TD>
-                <TD className="text-right tabular-nums">{c.invoiceCount}</TD>
-              </TR>
+                  </TD>
+                  {showPhone ? <TD className="whitespace-nowrap">{c.phone ?? '–'}</TD> : null}
+                  <TDMoney
+                    className={c.outstandingCents > 0 ? 'font-semibold text-loss' : undefined}
+                  >
+                    {fmtEUR(c.outstandingCents)}
+                  </TDMoney>
+                  <TD className="text-right">
+                    <Button
+                      size="sm"
+                      variant="ghost"
+                      aria-expanded={expanded.has(c.id)}
+                      aria-label={t('table.byTypeFor', { name: c.name })}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        toggle(c.id);
+                      }}
+                      onKeyDown={(e) => e.stopPropagation()}
+                    >
+                      {expanded.has(c.id) ? (
+                        <ChevronDown className="h-4 w-4" />
+                      ) : (
+                        <ChevronRight className="h-4 w-4" />
+                      )}
+                      {t('table.byTypeButton')}
+                    </Button>
+                  </TD>
+                  <TD className="text-right tabular-nums">{c.invoiceCount}</TD>
+                </TR>
+                {expanded.has(c.id) ? (
+                  <TR className="bg-muted/30 hover:bg-muted/30">
+                    <TD colSpan={showPhone ? 7 : 6}>
+                      {/* w-0 + min-w-full: fill the row without widening the customer table */}
+                    <div className="w-0 min-w-full">
+                      <CustomerBalance customerId={c.id} canWrite={canWrite} />
+                    </div>
+                    </TD>
+                  </TR>
+                ) : null}
+              </Fragment>
             ))}
           </TBody>
         </Table>
@@ -213,16 +270,30 @@ export default function CustomersPage() {
           <span className="text-muted-foreground">
             {t('common:common.page')} {page} {t('common:common.of')} {pageCount}
           </span>
-          <Button variant="outline" size="sm" disabled={page <= 1} onClick={() => setPage((p) => p - 1)}>
+          <Button
+            variant="outline"
+            size="sm"
+            disabled={page <= 1}
+            onClick={() => setPage((p) => p - 1)}
+          >
             {t('common:action.back')}
           </Button>
-          <Button variant="outline" size="sm" disabled={page >= pageCount} onClick={() => setPage((p) => p + 1)}>
+          <Button
+            variant="outline"
+            size="sm"
+            disabled={page >= pageCount}
+            onClick={() => setPage((p) => p + 1)}
+          >
             {t('common:action.next')}
           </Button>
         </div>
       ) : null}
 
-      <CustomerDetailDrawer customerId={detailId} onClose={() => setDetailId(null)} onEdit={openEdit} />
+      <CustomerDetailDrawer
+        customerId={detailId}
+        onClose={() => setDetailId(null)}
+        onEdit={openEdit}
+      />
       <CustomerFormDialog
         open={formOpen}
         onClose={() => setFormOpen(false)}

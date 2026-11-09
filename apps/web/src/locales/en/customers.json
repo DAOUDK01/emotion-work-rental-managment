@@ -29,7 +29,10 @@
     "rentals": "Rentals",
     "invoices": "Invoices",
     "businessIdShort": "Business ID",
-    "open": "Open customer {{name}}"
+    "open": "Open customer {{name}}",
+    "byType": "By type",
+    "byTypeButton": "Show",
+    "byTypeFor": "Show money by type for {{name}}"
   },
   "empty": {
     "title": "No customers yet",
@@ -139,5 +142,25 @@
     "erasedOk": "Personal data erased",
     "hasOutstanding": "Cannot erase: the customer still has an outstanding balance or open invoices.",
     "hasOutstandingDetail": "Cannot erase yet: {{amount}} is still outstanding ({{entries}} open entries, {{invoices}} unsettled invoices). Settle, void or cancel them first."
+  },
+  "balance": {
+    "type": "Type",
+    "charged": "Charged",
+    "paid": "Paid",
+    "owed": "Still owed",
+    "total": "Total",
+    "what": "What",
+    "invoice": "Invoice",
+    "openItems": "Open items",
+    "nothingOwed": "Nothing is owed — everything is paid.",
+    "recordPayment": "Record payment",
+    "amountNow": "Amount paid now",
+    "amountHint": "Can be less than what is owed; the rest stays open.",
+    "selectReceiver": "Who received the money?",
+    "save": "Save payment",
+    "paymentSaved": "Payment saved",
+    "amountInvalid": "Enter a valid amount",
+    "amountTooHigh": "The payment cannot be more than the {{owed}} still owed",
+    "receivedByRequired": "Choose who received the money"
   }
 }

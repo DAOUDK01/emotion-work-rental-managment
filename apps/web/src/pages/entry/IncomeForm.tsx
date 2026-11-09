@@ -33,6 +33,9 @@ import {
 
 const ISO_DATE_RE = /^\d{4}-\d{2}-\d{2}$/;
 
+/** Unpaid statuses that can take a part-payment right away. */
+const isOpen = (s: PaymentStatus) => s === 'PENDING' || s === 'INVOICED';
+
 interface IncomeValues {
   entryDate: string;
   modelId: string;
@@ -45,6 +48,7 @@ interface IncomeValues {
   vatInvoice: boolean;
   vatRateBp: string;
   paymentStatus: PaymentStatus;
+  paidNow: string;
   paymentMethodId: string;
   receivedById: string;
   notes: string;
@@ -63,6 +67,7 @@ interface CreateEntryPayload {
   vatInvoice: boolean;
   vatRateBp: number;
   paymentStatus: PaymentStatus;
+  paidNowCents: number | null;
   paymentMethodId: number | null;
   receivedById: number | null;
 }
@@ -85,7 +90,9 @@ interface IncomeCalc {
 }
 
 /** Client-side mirror of the API's VAT maths (shared incomeVat / addVatToNet). */
-function computeIncome(v: Pick<IncomeValues, 'amount' | 'enterNet' | 'discount' | 'vatInvoice' | 'vatRateBp'>): IncomeCalc | null {
+function computeIncome(
+  v: Pick<IncomeValues, 'amount' | 'enterNet' | 'discount' | 'vatInvoice' | 'vatRateBp'>,
+): IncomeCalc | null {
   const typedCents = parseCents(v.amount);
   const rateBp = parseRateBp(v.vatRateBp);
   if (typedCents === null || rateBp === null) return null;
@@ -119,6 +126,7 @@ function emptyIncome(entryDate: string, modelId: string, rateBp: number): Income
     vatInvoice: false,
     vatRateBp: String(rateBp),
     paymentStatus: 'PAID',
+    paidNow: '',
     paymentMethodId: '',
     receivedById: '',
     notes: '',
@@ -149,6 +157,7 @@ export function IncomeForm({ lookups }: { lookups: Lookups }) {
           vatInvoice: z.boolean(),
           vatRateBp: z.string().min(1, t('validation.rateRequired')),
           paymentStatus: z.enum(PAYMENT_STATUSES),
+          paidNow: z.string(),
           paymentMethodId: z.string(),
           receivedById: z.string(),
           notes: z.string().max(2000, t('validation.tooLong')),
@@ -156,19 +165,59 @@ export function IncomeForm({ lookups }: { lookups: Lookups }) {
         .superRefine((v, ctx) => {
           const typed = parseCents(v.amount);
           if (typed === null || typed === 0) {
-            ctx.addIssue({ code: z.ZodIssueCode.custom, path: ['amount'], message: t('validation.amountInvalid') });
+            ctx.addIssue({
+              code: z.ZodIssueCode.custom,
+              path: ['amount'],
+              message: t('validation.amountInvalid'),
+            });
           }
           const discount = v.discount.trim() ? parseCents(v.discount) : 0;
           if (discount === null) {
-            ctx.addIssue({ code: z.ZodIssueCode.custom, path: ['discount'], message: t('validation.amountInvalid') });
+            ctx.addIssue({
+              code: z.ZodIssueCode.custom,
+              path: ['discount'],
+              message: t('validation.amountInvalid'),
+            });
           } else if (discount > 0) {
             const calc = computeIncome(v);
             if (calc && discount > calc.grossBeforeCents) {
-              ctx.addIssue({ code: z.ZodIssueCode.custom, path: ['discount'], message: t('validation.discountTooHigh') });
+              ctx.addIssue({
+                code: z.ZodIssueCode.custom,
+                path: ['discount'],
+                message: t('validation.discountTooHigh'),
+              });
             }
           }
           if (v.paymentStatus === 'PAID' && !v.receivedById) {
-            ctx.addIssue({ code: z.ZodIssueCode.custom, path: ['receivedById'], message: t('validation.receivedByRequired') });
+            ctx.addIssue({
+              code: z.ZodIssueCode.custom,
+              path: ['receivedById'],
+              message: t('validation.receivedByRequired'),
+            });
+          }
+          // part-payment now (only for unpaid statuses): 0 … total, needs "Amount received by"
+          if (isOpen(v.paymentStatus) && v.paidNow.trim()) {
+            const paidNow = parseCents(v.paidNow);
+            const calc = computeIncome(v);
+            if (paidNow === null) {
+              ctx.addIssue({
+                code: z.ZodIssueCode.custom,
+                path: ['paidNow'],
+                message: t('validation.paidNowInvalid'),
+              });
+            } else if (calc && paidNow > calc.grossCents) {
+              ctx.addIssue({
+                code: z.ZodIssueCode.custom,
+                path: ['paidNow'],
+                message: t('validation.paidNowTooHigh'),
+              });
+            } else if (paidNow > 0 && !v.receivedById) {
+              ctx.addIssue({
+                code: z.ZodIssueCode.custom,
+                path: ['receivedById'],
+                message: t('validation.receivedByForPaidNow'),
+              });
+            }
           }
         }),
     [t],
@@ -212,7 +261,11 @@ export function IncomeForm({ lookups }: { lookups: Lookups }) {
   const selectedRateBp = parseRateBp(values.vatRateBp) ?? undefined;
   const rateOptions = vatOptionsOn(lookups.vatRates, values.entryDate, selectedRateBp);
   const pctOf = (bp: number) => fmtPct(bpToPct(bp), bp % 100 === 0 ? 0 : 1);
-  const amountLabel = values.enterNet && values.vatInvoice ? t('income.amountNet') : t('income.amountGross');
+  const amountLabel =
+    values.enterNet && values.vatInvoice ? t('income.amountNet') : t('income.amountGross');
+  const showPaidNow = isOpen(values.paymentStatus);
+  const paidNowCents = showPaidNow ? (parseCents(values.paidNow) ?? 0) : 0;
+  const receivedByNeeded = values.paymentStatus === 'PAID' || paidNowCents > 0;
 
   const save = useMutation({
     mutationFn: (payload: CreateEntryPayload) => api.post<CreateEntryResponse>('/entries', payload),
@@ -226,9 +279,16 @@ export function IncomeForm({ lookups }: { lookups: Lookups }) {
       // reset the form, keeping date + type for the next entry
       rateTouched.current = false;
       setLinkedCustomer(null);
-      reset(emptyIncome(payload.entryDate, String(payload.modelId), defaultRateBp(lookups.vatRates, payload.entryDate)));
+      reset(
+        emptyIncome(
+          payload.entryDate,
+          String(payload.modelId),
+          defaultRateBp(lookups.vatRates, payload.entryDate),
+        ),
+      );
     },
-    onError: (err) => toast.error(err instanceof Error ? err.message : t('common:common.errorTitle')),
+    onError: (err) =>
+      toast.error(err instanceof Error ? err.message : t('common:common.errorTitle')),
   });
 
   const onSubmit = handleSubmit((v) => {
@@ -247,6 +307,7 @@ export function IncomeForm({ lookups }: { lookups: Lookups }) {
       vatInvoice: v.vatInvoice,
       vatRateBp: c.rateBp,
       paymentStatus: v.paymentStatus,
+      paidNowCents: isOpen(v.paymentStatus) && v.paidNow.trim() ? parseCents(v.paidNow) : null,
       paymentMethodId: v.paymentMethodId ? Number(v.paymentMethodId) : null,
       receivedById: v.receivedById ? Number(v.receivedById) : null,
     });
@@ -256,13 +317,35 @@ export function IncomeForm({ lookups }: { lookups: Lookups }) {
     ? [
         ...(calc.netMode
           ? [
-              { key: 'typedNet', label: t('preview.netEntered'), value: fmtEUR(calc.typedCents), muted: true },
-              { key: 'grossBefore', label: t('preview.grossBeforeDiscount'), value: fmtEUR(calc.grossBeforeCents), muted: true },
+              {
+                key: 'typedNet',
+                label: t('preview.netEntered'),
+                value: fmtEUR(calc.typedCents),
+                muted: true,
+              },
+              {
+                key: 'grossBefore',
+                label: t('preview.grossBeforeDiscount'),
+                value: fmtEUR(calc.grossBeforeCents),
+                muted: true,
+              },
             ]
           : calc.discountCents > 0
-            ? [{ key: 'grossBefore', label: t('preview.grossBeforeDiscount'), value: fmtEUR(calc.grossBeforeCents), muted: true }]
+            ? [
+                {
+                  key: 'grossBefore',
+                  label: t('preview.grossBeforeDiscount'),
+                  value: fmtEUR(calc.grossBeforeCents),
+                  muted: true,
+                },
+              ]
             : []),
-        { key: 'gross', label: t('common:money.gross'), value: fmtEUR(calc.grossCents), strong: true },
+        {
+          key: 'gross',
+          label: t('common:money.gross'),
+          value: fmtEUR(calc.grossCents),
+          strong: true,
+        },
         {
           key: 'discount',
           label: t('preview.discount'),
@@ -276,6 +359,22 @@ export function IncomeForm({ lookups }: { lookups: Lookups }) {
         },
         { key: 'net', label: t('common:money.net'), value: fmtEUR(calc.netCents), strong: true },
         { key: 'nonVat', label: t('common:money.nonVat'), value: fmtEUR(calc.nonVatCents) },
+        ...(showPaidNow
+          ? [
+              {
+                key: 'paidNow',
+                label: t('preview.paidNow'),
+                value: fmtEUR(Math.min(paidNowCents, calc.grossCents)),
+              },
+              {
+                key: 'owed',
+                label: t('preview.stillOwed'),
+                value: fmtEUR(Math.max(0, calc.grossCents - paidNowCents)),
+                strong: true,
+                tone: calc.grossCents - paidNowCents > 0 ? ('loss' as const) : undefined,
+              },
+            ]
+          : []),
       ]
     : null;
 
@@ -283,7 +382,11 @@ export function IncomeForm({ lookups }: { lookups: Lookups }) {
     <div className="grid gap-4 lg:grid-cols-3">
       <div className="space-y-4 lg:col-span-2">
         {saved ? (
-          <IncomeSuccess entry={saved.entry} unitPayback={saved.unitPayback ?? null} onClose={() => setSaved(null)} />
+          <IncomeSuccess
+            entry={saved.entry}
+            unitPayback={saved.unitPayback ?? null}
+            onClose={() => setSaved(null)}
+          />
         ) : null}
 
         <Card>
@@ -291,7 +394,11 @@ export function IncomeForm({ lookups }: { lookups: Lookups }) {
             <form onSubmit={(e) => void onSubmit(e)} className="space-y-3" noValidate>
               <div className="grid gap-3 sm:grid-cols-2">
                 <Field label={t('common:common.date')} error={errors.entryDate?.message} required>
-                  <Input type="date" aria-label={t('common:common.date')} {...register('entryDate')} />
+                  <Input
+                    type="date"
+                    aria-label={t('common:common.date')}
+                    {...register('entryDate')}
+                  />
                 </Field>
                 <Field label={t('income.type')} error={errors.modelId?.message} required>
                   <Select aria-label={t('income.type')} {...register('modelId')}>
@@ -319,7 +426,11 @@ export function IncomeForm({ lookups }: { lookups: Lookups }) {
                   <CustomerPicker
                     label={t('income.customer')}
                     name={values.customerName}
-                    onNameChange={(name) => setValue('customerName', name, { shouldValidate: Boolean(errors.customerName) })}
+                    onNameChange={(name) =>
+                      setValue('customerName', name, {
+                        shouldValidate: Boolean(errors.customerName),
+                      })
+                    }
                     linked={linkedCustomer}
                     onLinkedChange={setLinkedCustomer}
                   />
@@ -329,9 +440,18 @@ export function IncomeForm({ lookups }: { lookups: Lookups }) {
                   label={amountLabel}
                   error={errors.amount?.message}
                   required
-                  hint={values.enterNet && !values.vatInvoice ? t('income.netNeedsVatInvoice') : undefined}
+                  hint={
+                    values.enterNet && !values.vatInvoice
+                      ? t('income.netNeedsVatInvoice')
+                      : undefined
+                  }
                 >
-                  <Input inputMode="decimal" placeholder="0,00" aria-label={amountLabel} {...register('amount')} />
+                  <Input
+                    inputMode="decimal"
+                    placeholder="0,00"
+                    aria-label={amountLabel}
+                    {...register('amount')}
+                  />
                   <Controller
                     control={control}
                     name="enterNet"
@@ -364,9 +484,17 @@ export function IncomeForm({ lookups }: { lookups: Lookups }) {
                 </Field>
 
                 <Field label={t('common:money.discount')} error={errors.discount?.message}>
-                  <Input inputMode="decimal" placeholder="0,00" aria-label={t('common:money.discount')} {...register('discount')} />
+                  <Input
+                    inputMode="decimal"
+                    placeholder="0,00"
+                    aria-label={t('common:money.discount')}
+                    {...register('discount')}
+                  />
                 </Field>
-                <Field label={t('common:money.discountReason')} error={errors.discountReason?.message}>
+                <Field
+                  label={t('common:money.discountReason')}
+                  error={errors.discountReason?.message}
+                >
                   <Input
                     aria-label={t('common:money.discountReason')}
                     placeholder={t('income.discountReasonPlaceholder')}
@@ -399,7 +527,11 @@ export function IncomeForm({ lookups }: { lookups: Lookups }) {
                   ) : null}
                 </div>
 
-                <Field label={t('fields.paymentStatus')} error={errors.paymentStatus?.message} required>
+                <Field
+                  label={t('fields.paymentStatus')}
+                  error={errors.paymentStatus?.message}
+                  required
+                >
                   <Select aria-label={t('fields.paymentStatus')} {...register('paymentStatus')}>
                     {PAYMENT_STATUSES.map((s) => (
                       <option key={s} value={s}>
@@ -408,11 +540,26 @@ export function IncomeForm({ lookups }: { lookups: Lookups }) {
                     ))}
                   </Select>
                 </Field>
+                {showPaidNow ? (
+                  <Field
+                    label={t('income.paidNow')}
+                    error={errors.paidNow?.message}
+                    hint={t('income.paidNowHint')}
+                  >
+                    <Input
+                      inputMode="decimal"
+                      placeholder="0,00"
+                      aria-label={t('income.paidNow')}
+                      {...register('paidNow')}
+                    />
+                  </Field>
+                ) : null}
                 <Field label={t('common:money.paymentMethod')}>
                   <Select
                     aria-label={t('common:money.paymentMethod')}
                     {...register('paymentMethodId', {
-                      onChange: (e: React.ChangeEvent<HTMLSelectElement>) => applyVatDefault(getValues('receivedById'), e.target.value),
+                      onChange: (e: React.ChangeEvent<HTMLSelectElement>) =>
+                        applyVatDefault(getValues('receivedById'), e.target.value),
                     })}
                   >
                     <option value="">{t('fields.notSet')}</option>
@@ -426,13 +573,14 @@ export function IncomeForm({ lookups }: { lookups: Lookups }) {
                 <Field
                   label={t('common:money.receivedBy')}
                   error={errors.receivedById?.message}
-                  required={values.paymentStatus === 'PAID'}
-                  hint={values.paymentStatus === 'PAID' ? undefined : t('income.receivedByHint')}
+                  required={receivedByNeeded}
+                  hint={receivedByNeeded ? undefined : t('income.receivedByHint')}
                 >
                   <Select
                     aria-label={t('common:money.receivedBy')}
                     {...register('receivedById', {
-                      onChange: (e: React.ChangeEvent<HTMLSelectElement>) => applyVatDefault(e.target.value, getValues('paymentMethodId')),
+                      onChange: (e: React.ChangeEvent<HTMLSelectElement>) =>
+                        applyVatDefault(e.target.value, getValues('paymentMethodId')),
                     })}
                   >
                     <option value="">{t('fields.notSet')}</option>
@@ -444,8 +592,17 @@ export function IncomeForm({ lookups }: { lookups: Lookups }) {
                   </Select>
                 </Field>
 
-                <Field label={t('common:common.notes')} error={errors.notes?.message} className="sm:col-span-2">
-                  <Textarea rows={2} aria-label={t('common:common.notes')} placeholder={t('income.notesPlaceholder')} {...register('notes')} />
+                <Field
+                  label={t('common:common.notes')}
+                  error={errors.notes?.message}
+                  className="sm:col-span-2"
+                >
+                  <Textarea
+                    rows={2}
+                    aria-label={t('common:common.notes')}
+                    placeholder={t('income.notesPlaceholder')}
+                    {...register('notes')}
+                  />
                 </Field>
               </div>
               <div className="flex flex-wrap items-center justify-end gap-2 pt-1">
@@ -454,7 +611,13 @@ export function IncomeForm({ lookups }: { lookups: Lookups }) {
                   onClick={() => {
                     rateTouched.current = false;
                     setLinkedCustomer(null);
-                    reset(emptyIncome(getValues('entryDate'), getValues('modelId'), defaultRateBp(lookups.vatRates, getValues('entryDate'))));
+                    reset(
+                      emptyIncome(
+                        getValues('entryDate'),
+                        getValues('modelId'),
+                        defaultRateBp(lookups.vatRates, getValues('entryDate')),
+                      ),
+                    );
                   }}
                   disabled={save.isPending}
                 >

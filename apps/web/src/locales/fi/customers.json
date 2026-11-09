@@ -29,7 +29,10 @@
     "rentals": "Vuokraukset",
     "invoices": "Laskut",
     "businessIdShort": "Y-tunnus",
-    "open": "Avaa asiakas {{name}}"
+    "open": "Avaa asiakas {{name}}",
+    "byType": "Tyypeittäin",
+    "byTypeButton": "Näytä",
+    "byTypeFor": "Näytä summat tyypeittäin: {{name}}"
   },
   "empty": {
     "title": "Ei vielä asiakkaita",
@@ -139,5 +142,25 @@
     "erasedOk": "Henkilötiedot poistettu",
     "hasOutstanding": "Poisto ei onnistu: asiakkaalla on vielä avoimia saatavia tai maksamattomia laskuja.",
     "hasOutstandingDetail": "Poisto ei vielä onnistu: {{amount}} on yhä avoinna ({{entries}} avointa kirjausta, {{invoices}} maksamatonta laskua). Kuittaa, mitätöi tai hyvitä ne ensin."
+  },
+  "balance": {
+    "type": "Tyyppi",
+    "charged": "Veloitettu",
+    "paid": "Maksettu",
+    "owed": "Maksamatta",
+    "total": "Yhteensä",
+    "what": "Mitä",
+    "invoice": "Lasku",
+    "openItems": "Avoimet erät",
+    "nothingOwed": "Ei maksamattomia — kaikki on maksettu.",
+    "recordPayment": "Kirjaa maksu",
+    "amountNow": "Nyt maksettu summa",
+    "amountHint": "Voi olla pienempi kuin avoin summa; loput jää avoimeksi.",
+    "selectReceiver": "Kuka vastaanotti rahat?",
+    "save": "Tallenna maksu",
+    "paymentSaved": "Maksu tallennettu",
+    "amountInvalid": "Anna kelvollinen summa",
+    "amountTooHigh": "Maksu ei voi olla suurempi kuin avoin {{owed}}",
+    "receivedByRequired": "Valitse rahan vastaanottaja"
   }
 }

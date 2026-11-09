@@ -16,12 +16,14 @@ import {
 import { prisma } from '../../db.js';
 import { getSetting } from '../../services/settings.js';
 import { taxRateOn } from '../../services/entries.js';
+import { withBalances } from '../../services/balances.js';
 
 /**
  * Dashboard aggregation. The semantics mirror the client's Excel Calc sheet exactly
  * (see data/source/analysis/sheet_Calc.txt and the reconciliation test):
  *  - "Total sales" = Σ gross of ACTIVE entries (amounts as entered, VAT-inclusive)
- *  - Received = Σ gross of PAID entries; Outstanding = INVOICED + PENDING
+ *  - Received = Σ gross of PAID entries + part-payments on open ones;
+ *    Outstanding = INVOICED + PENDING minus their part-payments (services/balances.ts)
  *  - Shared costs (expenses) are only in scope when NO unit/segment filter is active
  *  - Unit purchases are capital investment — excluded from profit unless the
  *    pnl.countUnitPurchasesAsCost setting (the Excel toggle) says otherwise
@@ -58,13 +60,14 @@ interface EntryRow {
   receivedBy: { id: number; name: string } | null;
 }
 
-const OUTSTANDING = ['INVOICED', 'PENDING'] as const;
-
 function dateRange(from: ISODate, to: ISODate) {
   return { gte: new Date(`${from}T00:00:00Z`), lte: new Date(`${to}T00:00:00Z`) };
 }
 
-export async function loadEntries(f: DashboardFilters): Promise<EntryRow[]> {
+/** Entries in the filter scope, each with received / still-owed cents (part-payments counted). */
+export async function loadEntries(
+  f: DashboardFilters,
+): Promise<Array<EntryRow & { receivedCents: number; outstandingCents: number }>> {
   const where: Prisma.EntryWhereInput = {
     status: 'ACTIVE',
     entryDate: dateRange(f.from, f.to),
@@ -73,7 +76,7 @@ export async function loadEntries(f: DashboardFilters): Promise<EntryRow[]> {
     ...(f.segment ? { segment: f.segment } : {}),
     ...(f.receivedById ? { receivedById: f.receivedById } : {}),
   };
-  return (await prisma.entry.findMany({
+  const rows = (await prisma.entry.findMany({
     where,
     select: {
       id: true,
@@ -95,6 +98,7 @@ export async function loadEntries(f: DashboardFilters): Promise<EntryRow[]> {
       receivedBy: { select: { id: true, name: true } },
     },
   })) as unknown as EntryRow[];
+  return withBalances(rows);
 }
 
 export async function salariesInPeriod(from: ISODate, to: ISODate): Promise<number> {
@@ -118,24 +122,26 @@ export async function dashboardSummary(f: DashboardFilters) {
   const sharedCostsInScope = !f.unitId && !f.segment;
   const [entries, pnlSettings, taxRateBp] = await Promise.all([
     loadEntries(f),
-    getSetting<{ countUnitPurchasesAsCost: boolean; allocateSharedCostsByRevenue: boolean }>('pnl', {
-      countUnitPurchasesAsCost: false,
-      allocateSharedCostsByRevenue: false,
-    }),
+    getSetting<{ countUnitPurchasesAsCost: boolean; allocateSharedCostsByRevenue: boolean }>(
+      'pnl',
+      {
+        countUnitPurchasesAsCost: false,
+        allocateSharedCostsByRevenue: false,
+      },
+    ),
     taxRateOn(f.to),
   ]);
 
-  const sum = (rows: EntryRow[], pick: (e: EntryRow) => number) =>
-    rows.reduce((acc, e) => acc + pick(e), 0);
+  type Row = (typeof entries)[number];
+  const sum = (rows: Row[], pick: (e: Row) => number) => rows.reduce((acc, e) => acc + pick(e), 0);
 
   const totalSalesCents = sum(entries, (e) => e.grossCents);
   const totalNetCents = sum(entries, (e) => e.netCents);
   const paid = entries.filter((e) => e.paymentStatus === 'PAID');
-  const outstanding = entries.filter((e) =>
-    (OUTSTANDING as readonly string[]).includes(e.paymentStatus),
-  );
-  const receivedCents = sum(paid, (e) => e.grossCents);
-  const outstandingCents = sum(outstanding, (e) => e.grossCents);
+  // part-paid open items: the received part counts as received, the rest as outstanding
+  const outstanding = entries.filter((e) => e.outstandingCents > 0);
+  const receivedCents = sum(entries, (e) => e.receivedCents);
+  const outstandingCents = sum(entries, (e) => e.outstandingCents);
   const outstandingCustomers = new Set(
     outstanding.map((e) => e.customerId ?? `n:${(e.customerName ?? 'unknown').toLowerCase()}`),
   ).size;
@@ -184,7 +190,8 @@ export async function dashboardSummary(f: DashboardFilters) {
       },
       select: { purchaseCents: true },
     });
-    unitPurchasesCents = units.reduce((a, u) => a + (u.purchaseCents ?? 0), 0) + unitPurchaseExpensesCents;
+    unitPurchasesCents =
+      units.reduce((a, u) => a + (u.purchaseCents ?? 0), 0) + unitPurchaseExpensesCents;
   }
 
   const salariesCents = sharedCostsInScope ? await salariesInPeriod(f.from, f.to) : 0;
@@ -198,7 +205,8 @@ export async function dashboardSummary(f: DashboardFilters) {
   const costsCountedCents =
     expensesOperatingCents + salariesCents + (countUnits ? unitPurchasesCents : 0);
   const netProfitCents = totalNetCents - costsCountedCents;
-  const expensesKpiCents = expensesOperatingCents + salariesCents + (countUnits ? unitPurchasesCents : 0);
+  const expensesKpiCents =
+    expensesOperatingCents + salariesCents + (countUnits ? unitPurchasesCents : 0);
 
   // ---- VAT ----
   const vatCollectedCents = sum(
@@ -259,16 +267,26 @@ export async function dashboardSummary(f: DashboardFilters) {
   // ---- charts ----
   const byModel = new Map<
     number,
-    { model: EntryRow['model']; grossCents: number; netCents: number; receivedCents: number; outstandingCents: number }
+    {
+      model: EntryRow['model'];
+      grossCents: number;
+      netCents: number;
+      receivedCents: number;
+      outstandingCents: number;
+    }
   >();
   for (const e of entries) {
-    const bucket =
-      byModel.get(e.modelId) ??
-      { model: e.model, grossCents: 0, netCents: 0, receivedCents: 0, outstandingCents: 0 };
+    const bucket = byModel.get(e.modelId) ?? {
+      model: e.model,
+      grossCents: 0,
+      netCents: 0,
+      receivedCents: 0,
+      outstandingCents: 0,
+    };
     bucket.grossCents += e.grossCents;
     bucket.netCents += e.netCents;
-    if (e.paymentStatus === 'PAID') bucket.receivedCents += e.grossCents;
-    else if ((OUTSTANDING as readonly string[]).includes(e.paymentStatus)) bucket.outstandingCents += e.grossCents;
+    bucket.receivedCents += e.receivedCents;
+    bucket.outstandingCents += e.outstandingCents;
     byModel.set(e.modelId, bucket);
   }
   const revenueByModel = [...byModel.values()]
@@ -314,11 +332,8 @@ export async function dashboardSummary(f: DashboardFilters) {
     return {
       key,
       label: monthLabel(key),
-      receivedCents: sum(inMonth.filter((e) => e.paymentStatus === 'PAID'), (e) => e.grossCents),
-      outstandingCents: sum(
-        inMonth.filter((e) => (OUTSTANDING as readonly string[]).includes(e.paymentStatus)),
-        (e) => e.grossCents,
-      ),
+      receivedCents: sum(inMonth, (e) => e.receivedCents),
+      outstandingCents: sum(inMonth, (e) => e.outstandingCents),
     };
   });
 
@@ -341,10 +356,17 @@ export async function dashboardSummary(f: DashboardFilters) {
   const catMap = new Map<string, { receivedCents: number; outstandingCents: number }>();
   for (const e of rentalEntries) {
     const cat = e.unit?.category ?? 'Unassigned';
-    const label = cat === 'E_SCOOTER' ? 'E-Scooter' : cat === 'E_BIKE' ? 'E-Bike' : cat === 'MOPED' ? 'Moped' : cat;
+    const label =
+      cat === 'E_SCOOTER'
+        ? 'E-Scooter'
+        : cat === 'E_BIKE'
+          ? 'E-Bike'
+          : cat === 'MOPED'
+            ? 'Moped'
+            : cat;
     const bucket = catMap.get(label) ?? { receivedCents: 0, outstandingCents: 0 };
-    if (e.paymentStatus === 'PAID') bucket.receivedCents += e.grossCents;
-    else if ((OUTSTANDING as readonly string[]).includes(e.paymentStatus)) bucket.outstandingCents += e.grossCents;
+    bucket.receivedCents += e.receivedCents;
+    bucket.outstandingCents += e.outstandingCents;
     catMap.set(label, bucket);
   }
   const rentalByCategory = [...catMap.entries()].map(([category, v]) => ({ category, ...v }));
@@ -388,7 +410,10 @@ export async function dashboardSummary(f: DashboardFilters) {
     profitByModel,
     sharedCostsRow,
     monthlyTrend,
-    revenueByChannel: revenueByModel.map((r) => ({ label: r.model.nameEn, grossCents: r.grossCents })),
+    revenueByChannel: revenueByModel.map((r) => ({
+      label: r.model.nameEn,
+      grossCents: r.grossCents,
+    })),
     revenueByReceiver,
     expensesByType,
     rentalByCategory,
@@ -407,7 +432,11 @@ export async function growthSeries(params: {
   segment?: 'INDIVIDUAL' | 'BUSINESS';
   receivedById?: number;
 }) {
-  const buckets = { weekly: 7 * (params.count + 1), monthly: 32 * (params.count + 1), yearly: 366 * (params.count + 1) };
+  const buckets = {
+    weekly: 7 * (params.count + 1),
+    monthly: 32 * (params.count + 1),
+    yearly: 366 * (params.count + 1),
+  };
   const earliest = new Date(`${params.endDate}T00:00:00Z`);
   earliest.setUTCDate(earliest.getUTCDate() - buckets[params.granularity]);
   const entries = await prisma.entry.findMany({
@@ -429,11 +458,22 @@ export async function growthSeries(params: {
   return buildGrowthSeries(rows, params.granularity, params.count, params.endDate);
 }
 
-export async function unitPerformance(f: { from: ISODate; to: ISODate; segment?: 'INDIVIDUAL' | 'BUSINESS' }) {
+export async function unitPerformance(f: {
+  from: ISODate;
+  to: ISODate;
+  segment?: 'INDIVIDUAL' | 'BUSINESS';
+}) {
   const [units, entries] = await Promise.all([
     prisma.unit.findMany({
       where: { active: true },
-      select: { id: true, code: true, brand: true, category: true, status: true, purchaseCents: true },
+      select: {
+        id: true,
+        code: true,
+        brand: true,
+        category: true,
+        status: true,
+        purchaseCents: true,
+      },
       orderBy: { code: 'asc' },
     }),
     prisma.entry.findMany({
@@ -490,10 +530,18 @@ export async function unitPerformance(f: { from: ISODate; to: ISODate; segment?:
 
 export async function profitBridge(f: DashboardFilters) {
   const s = await dashboardSummary(f);
-  const rows: Array<{ label: string; amountCents: number | null; kind: 'add' | 'subtract' | 'total' | 'info' }> = [];
+  const rows: Array<{
+    label: string;
+    amountCents: number | null;
+    kind: 'add' | 'subtract' | 'total' | 'info';
+  }> = [];
   const rental = s.revenueByModel.find((r) => r.model.code === 'RENTAL');
   const others = s.revenueByModel.filter((r) => r.model.code !== 'RENTAL');
-  rows.push({ label: 'Rental revenue (billed)', amountCents: rental?.grossCents ?? 0, kind: 'add' });
+  rows.push({
+    label: 'Rental revenue (billed)',
+    amountCents: rental?.grossCents ?? 0,
+    kind: 'add',
+  });
   rows.push({
     label: 'Parts, repair & other sales revenue',
     amountCents: others.reduce((a, r) => a + r.grossCents, 0),
@@ -501,14 +549,22 @@ export async function profitBridge(f: DashboardFilters) {
   });
   rows.push({ label: 'Total revenue', amountCents: s.kpis.totalSalesCents, kind: 'total' });
   if (s.kpis.totalSalesCents !== s.kpis.totalNetCents) {
-    rows.push({ label: 'Less: VAT included in sales', amountCents: -(s.kpis.totalSalesCents - s.kpis.totalNetCents), kind: 'subtract' });
+    rows.push({
+      label: 'Less: VAT included in sales',
+      amountCents: -(s.kpis.totalSalesCents - s.kpis.totalNetCents),
+      kind: 'subtract',
+    });
   }
   for (const e of s.expensesByType) {
     if (e.category === 'Unit purchases') continue;
     rows.push({ label: `Less: ${e.category}`, amountCents: -e.grossCents, kind: 'subtract' });
   }
   if (s.kpis.unitPurchasesCounted && s.kpis.unitPurchasesCents > 0) {
-    rows.push({ label: 'Less: unit purchases (included)', amountCents: -s.kpis.unitPurchasesCents, kind: 'subtract' });
+    rows.push({
+      label: 'Less: unit purchases (included)',
+      amountCents: -s.kpis.unitPurchasesCents,
+      kind: 'subtract',
+    });
   } else if (s.kpis.unitPurchasesCents > 0) {
     rows.push({
       label: `Unit purchases (excluded — investment): ${(s.kpis.unitPurchasesCents / 100).toFixed(2)} €`,
