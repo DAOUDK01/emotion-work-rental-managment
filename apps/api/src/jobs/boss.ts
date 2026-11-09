@@ -65,12 +65,31 @@ async function registerJobHandlers(b: PgBoss): Promise<void> {
     await b.createQueue(queue).catch(() => {});
   }
 
-  await b.work('whatsapp-reply', async ([job]) => handleWhatsAppReplyJob(job.data as never));
-  await b.work('sheets-sync', async () => handleSheetsSyncJob());
-  await b.work('recurring-rentals', async () => handleRecurringRentalsJob());
-  await b.work('invoice-overdue', async () => handleInvoiceOverdueJob());
-  await b.work('whatsapp-daily-summary', async () => handleWhatsAppDailySummary());
-  await b.work('email-outbox', async () => handleEmailOutboxJob());
+  // pg-boss records a failed job silently and retries it, so log the error here:
+  // otherwise a rejected WhatsApp send (bad token, unverified recipient) leaves no trace.
+  const logged =
+    <T>(queue: string, run: (job: T) => Promise<void>) =>
+    async ([job]: T[]) => {
+      try {
+        await run(job);
+      } catch (err) {
+        logger.error({ err, queue }, `job ${queue} failed`);
+        throw err;
+      }
+    };
+
+  await b.work(
+    'whatsapp-reply',
+    logged('whatsapp-reply', async (job: { data: unknown }) => handleWhatsAppReplyJob(job.data as never)),
+  );
+  await b.work('sheets-sync', logged('sheets-sync', async () => handleSheetsSyncJob()));
+  await b.work('recurring-rentals', logged('recurring-rentals', async () => handleRecurringRentalsJob()));
+  await b.work('invoice-overdue', logged('invoice-overdue', async () => handleInvoiceOverdueJob()));
+  await b.work(
+    'whatsapp-daily-summary',
+    logged('whatsapp-daily-summary', async () => handleWhatsAppDailySummary()),
+  );
+  await b.work('email-outbox', logged('email-outbox', async () => handleEmailOutboxJob()));
 
   // Europe/Helsinki schedules
   await b.schedule('recurring-rentals', '15 6 * * *', undefined, { tz: 'Europe/Helsinki' });
