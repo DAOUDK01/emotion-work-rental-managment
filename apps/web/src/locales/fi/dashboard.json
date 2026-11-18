@@ -1,5 +1,14 @@
 {
   "title": "Kojelauta",
+  "header": {
+    "eyebrow": "Liiketoiminnan yleiskuva",
+    "subtitle": "Luvut ajalta {{from}} – {{to}}"
+  },
+  "sections": {
+    "keyFigures": "Avainluvut",
+    "performance": "Tulos",
+    "moreFigures": "Lisää lukuja"
+  },
   "filters": {
     "allModels": "Kaikki mallit",
     "unit": "Laite",
@@ -11,7 +20,8 @@
     "receivedBy": "Vastaanottaja",
     "anyReceiver": "Kuka tahansa",
     "more": "Lisää suodattimia",
-    "fewer": "Vähemmän suodattimia"
+    "fewer": "Vähemmän suodattimia",
+    "model": "Malli"
   },
   "details": {
     "show": "Näytä lisätiedot",
@@ -70,10 +80,15 @@
     "cost": "Hankintahinta",
     "diff": "Tulot − hinta",
     "payback": "Takaisinmaksu",
-    "paidBack": "Maksettu takaisin"
+    "paidBack": "Maksettu takaisin",
+    "subtitle": "Kunkin laitteen vuokratuotot verrattuna sen hankintahintaan",
+    "empty": "Ei näytettäviä laitteita tällä jaksolla"
   },
-  "bridge": { "title": "Tulossilta" },
+  "bridge": {
+    "title": "Tulossilta"
+  },
   "alerts": {
+    "title": "Rahaa odottaa tilitystä",
     "cashHolding": "{{name}} pitää hallussaan {{amount}} (vanhin kuitti {{date}}) — tilitä yritystilille."
   }
 }

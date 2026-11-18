@@ -2,6 +2,8 @@ import { useTranslation } from 'react-i18next';
 import { periodRange, todayInHelsinki, type ISODate } from '@emotionfix/shared';
 import { Segmented } from '@/components/ui/misc';
 import { Input, Label } from '@/components/ui/input';
+import { CalendarDays } from 'lucide-react';
+import { fmtDate } from '@/lib/format';
 
 export type PeriodKind = 'week' | 'month' | 'year' | 'custom';
 
@@ -60,8 +62,9 @@ export function PeriodSelector({ value, onChange }: { value: Period; onChange: (
           </div>
         </div>
       ) : (
-        <span className="pb-1.5 text-xs text-muted-foreground tabular-nums">
-          {value.from} — {value.to}
+        <span className="mb-1 inline-flex items-center gap-1.5 rounded-full border border-border/70 bg-card px-2.5 py-1 text-xs font-medium text-muted-foreground shadow-xs tabular-nums">
+          <CalendarDays className="h-3.5 w-3.5" />
+          {fmtDate(value.from)} – {fmtDate(value.to)}
         </span>
       )}
     </div>

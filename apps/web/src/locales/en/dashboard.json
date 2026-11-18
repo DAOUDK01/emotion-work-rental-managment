@@ -1,5 +1,14 @@
 {
   "title": "Dashboard",
+  "header": {
+    "eyebrow": "Business overview",
+    "subtitle": "Figures for {{from}} – {{to}}"
+  },
+  "sections": {
+    "keyFigures": "Key figures",
+    "performance": "Performance",
+    "moreFigures": "More figures"
+  },
   "filters": {
     "allModels": "All models",
     "unit": "Unit",
@@ -11,7 +20,8 @@
     "receivedBy": "Received by",
     "anyReceiver": "Anyone",
     "more": "More filters",
-    "fewer": "Fewer filters"
+    "fewer": "Fewer filters",
+    "model": "Model"
   },
   "details": {
     "show": "Show more details",
@@ -70,10 +80,15 @@
     "cost": "Purchase cost",
     "diff": "Revenue − cost",
     "payback": "Payback",
-    "paidBack": "Paid back"
+    "paidBack": "Paid back",
+    "subtitle": "What each unit has earned in rent compared with what it cost",
+    "empty": "No units to show for this period"
   },
-  "bridge": { "title": "Profit bridge" },
+  "bridge": {
+    "title": "Profit bridge"
+  },
   "alerts": {
+    "title": "Money waiting to be handed over",
     "cashHolding": "{{name}} is holding {{amount}} (oldest receipt {{date}}) — hand over to the company account."
   }
 }

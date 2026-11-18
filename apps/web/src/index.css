@@ -2,62 +2,137 @@
 @tailwind components;
 @tailwind utilities;
 
+/*
+ * EmotionFix design tokens. Values are HSL triplets ("H S% L%") so Tailwind can add alpha.
+ * Brand: deep ink navy (trust, accounting) + electric teal (e-mobility). Charts use the
+ * --chart-* series; profit/loss stay green/red everywhere (house rule).
+ */
 @layer base {
   :root {
-    --background: 210 20% 98%;
-    --foreground: 215 50% 12%;
+    --background: 220 27% 97.5%;
+    --foreground: 222 47% 11%;
     --card: 0 0% 100%;
-    --card-foreground: 215 50% 12%;
-    --primary: 215 73% 16%; /* navy #0b2545 */
+    --card-foreground: 222 47% 11%;
+    --surface: 220 24% 95.5%;
+    --primary: 218 64% 20%;
     --primary-foreground: 0 0% 100%;
-    --secondary: 210 16% 93%;
-    --secondary-foreground: 215 50% 15%;
-    --muted: 210 16% 94%;
-    --muted-foreground: 215 12% 42%;
-    --accent: 172 58% 39%; /* teal */
+    --secondary: 220 20% 94.5%;
+    --secondary-foreground: 222 40% 16%;
+    --muted: 220 22% 95%;
+    --muted-foreground: 220 10% 43%;
+    --accent: 171 78% 34%;
     --accent-foreground: 0 0% 100%;
-    --destructive: 0 68% 47%;
+    --destructive: 357 72% 50%;
     --destructive-foreground: 0 0% 100%;
-    --border: 214 15% 88%;
-    --input: 214 15% 84%;
-    --ring: 215 73% 30%;
+    --border: 220 17% 90%;
+    --input: 220 15% 85%;
+    --ring: 171 78% 34%;
+    --shadow: 222 47% 11%;
+
+    --profit: 152 65% 32%;
+    --loss: 357 72% 48%;
+    --warning: 33 92% 44%;
+    --info: 205 85% 42%;
+    --navy: 218 64% 20%;
+    --teal: 171 78% 34%;
+
+    --chart-1: 222 62% 30%;
+    --chart-2: 171 70% 38%;
+    --chart-3: 252 62% 60%;
+    --chart-4: 30 92% 55%;
+    --chart-5: 199 84% 48%;
+    --chart-6: 340 72% 56%;
+    --chart-grid: 220 16% 90%;
+
+    --sidebar: 222 47% 11%;
+    --sidebar-foreground: 220 30% 96%;
+    --sidebar-muted: 220 14% 64%;
+    --sidebar-border: 222 32% 19%;
+    --sidebar-active: 171 72% 46%;
   }
   .dark {
-    --background: 218 32% 10%;
-    --foreground: 210 20% 92%;
-    --card: 218 28% 14%;
-    --card-foreground: 210 20% 92%;
-    --primary: 210 70% 60%;
-    --primary-foreground: 218 40% 10%;
-    --secondary: 218 20% 20%;
-    --secondary-foreground: 210 20% 88%;
-    --muted: 218 20% 18%;
-    --muted-foreground: 215 12% 62%;
-    --accent: 172 50% 42%;
-    --accent-foreground: 0 0% 100%;
-    --destructive: 0 62% 52%;
+    --background: 224 33% 6.5%;
+    --foreground: 214 32% 92%;
+    --card: 223 29% 10%;
+    --card-foreground: 214 32% 92%;
+    --surface: 223 26% 13%;
+    --primary: 213 94% 68%;
+    --primary-foreground: 224 45% 9%;
+    --secondary: 223 22% 16%;
+    --secondary-foreground: 214 30% 90%;
+    --muted: 223 22% 14%;
+    --muted-foreground: 218 13% 64%;
+    --accent: 170 68% 44%;
+    --accent-foreground: 224 45% 8%;
+    --destructive: 357 78% 60%;
     --destructive-foreground: 0 0% 100%;
-    --border: 218 18% 24%;
-    --input: 218 18% 28%;
-    --ring: 210 70% 60%;
+    --border: 223 20% 18%;
+    --input: 223 18% 24%;
+    --ring: 170 68% 46%;
+    --shadow: 228 60% 2%;
+
+    --profit: 152 58% 50%;
+    --loss: 357 85% 66%;
+    --warning: 38 92% 58%;
+    --info: 203 90% 64%;
+    --navy: 213 85% 62%;
+    --teal: 170 68% 48%;
+
+    --chart-1: 213 90% 66%;
+    --chart-2: 170 66% 48%;
+    --chart-3: 252 80% 74%;
+    --chart-4: 32 94% 62%;
+    --chart-5: 195 85% 60%;
+    --chart-6: 340 80% 68%;
+    --chart-grid: 223 20% 18%;
+
+    --sidebar: 225 36% 5%;
+    --sidebar-foreground: 214 32% 94%;
+    --sidebar-muted: 218 13% 60%;
+    --sidebar-border: 223 26% 13%;
+    --sidebar-active: 170 68% 50%;
   }
   html,
   body,
   #root {
     height: 100%;
   }
+  html {
+    color-scheme: light;
+  }
+  html.dark {
+    color-scheme: dark;
+  }
   body {
-    @apply bg-background text-foreground antialiased;
-    font-family:
-      'Inter',
-      system-ui,
-      -apple-system,
-      'Segoe UI',
-      Roboto,
-      sans-serif;
+    @apply bg-background font-sans text-foreground antialiased;
+    font-feature-settings:
+      'cv02',
+      'cv03',
+      'cv04',
+      'cv11';
+    text-rendering: optimizeLegibility;
   }
   * {
     @apply border-border;
+  }
+  ::selection {
+    background: hsl(var(--accent) / 0.25);
+  }
+}
+
+@layer components {
+  /* the soft "elevated" page backdrop behind the main content */
+  .app-backdrop {
+    background-color: hsl(var(--background));
+    background-image:
+      radial-gradient(1200px 380px at 12% -120px, hsl(var(--accent) / 0.07), transparent 70%),
+      radial-gradient(900px 340px at 92% -140px, hsl(var(--chart-1) / 0.07), transparent 70%);
+    background-repeat: no-repeat;
+  }
+  .sidebar-glow {
+    background-image:
+      radial-gradient(420px 260px at -40px -60px, hsl(var(--sidebar-active) / 0.18), transparent 70%),
+      linear-gradient(180deg, hsl(var(--sidebar)) 0%, hsl(var(--sidebar)) 100%);
   }
 }
 
@@ -65,12 +140,31 @@
   .tabular-nums {
     font-variant-numeric: tabular-nums;
   }
+  .scrollbar-thin {
+    scrollbar-width: thin;
+    scrollbar-color: hsl(var(--muted-foreground) / 0.3) transparent;
+  }
   .scrollbar-thin::-webkit-scrollbar {
     width: 6px;
     height: 6px;
   }
   .scrollbar-thin::-webkit-scrollbar-thumb {
     @apply rounded bg-muted-foreground/30;
+  }
+  .scrollbar-none {
+    scrollbar-width: none;
+  }
+  .scrollbar-none::-webkit-scrollbar {
+    display: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
   }
 }
 

@@ -46,7 +46,7 @@ export default function LoginPage() {
   });
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-gradient-to-br from-navy to-[#143a6b] p-4">
+    <div className="flex min-h-screen items-center justify-center bg-gradient-to-br from-[hsl(var(--sidebar))] via-[hsl(218_60%_16%)] to-[hsl(212_70%_24%)] p-4">
       <Card className="w-full max-w-sm p-6 shadow-2xl">
         <div className="mb-5 text-center">
           <div className="mx-auto mb-2 flex h-11 w-11 items-center justify-center rounded-full bg-accent/15">

@@ -6,17 +6,17 @@ import { ApiError } from '@/lib/api';
 import i18n from '@/lib/i18n';
 
 const badgeVariants = cva(
-  'inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-2xs font-semibold',
+  'inline-flex items-center gap-1 whitespace-nowrap rounded-full px-2 py-0.5 text-2xs font-semibold ring-1 ring-inset',
   {
     variants: {
       variant: {
-        default: 'bg-secondary text-secondary-foreground',
-        success: 'bg-profit/15 text-profit',
-        danger: 'bg-loss/15 text-loss',
-        warning: 'bg-amber-500/15 text-amber-700 dark:text-amber-400',
-        info: 'bg-sky-500/15 text-sky-700 dark:text-sky-400',
-        outline: 'border text-foreground',
-        navy: 'bg-navy text-white',
+        default: 'bg-secondary text-secondary-foreground ring-border/60',
+        success: 'bg-profit/10 text-profit ring-profit/20',
+        danger: 'bg-loss/10 text-loss ring-loss/20',
+        warning: 'bg-warning/10 text-warning ring-warning/25',
+        info: 'bg-info/10 text-info ring-info/20',
+        outline: 'text-foreground ring-border',
+        navy: 'bg-navy text-white ring-transparent dark:text-[hsl(var(--primary-foreground))]',
       },
     },
     defaultVariants: { variant: 'default' },
@@ -35,7 +35,7 @@ export function Spinner({ className }: { className?: string }) {
   return (
     <div
       className={cn(
-        'h-6 w-6 animate-spin rounded-full border-2 border-primary border-t-transparent',
+        'h-6 w-6 animate-spin rounded-full border-2 border-accent/25 border-t-accent',
         className,
       )}
       role="status"
@@ -44,9 +44,14 @@ export function Spinner({ className }: { className?: string }) {
   );
 }
 
-export function LoadingState({ label }: { label?: string }) {
+export function LoadingState({ label, className }: { label?: string; className?: string }) {
   return (
-    <div className="flex min-h-[200px] flex-col items-center justify-center gap-3 text-muted-foreground">
+    <div
+      className={cn(
+        'flex min-h-[200px] flex-col items-center justify-center gap-3 text-muted-foreground',
+        className,
+      )}
+    >
       <Spinner />
       {label ? <p className="text-sm">{label}</p> : null}
     </div>
@@ -57,14 +62,25 @@ export function EmptyState({
   title,
   hint,
   action,
+  icon: Icon = FileSearch,
+  className,
 }: {
   title: string;
   hint?: string;
   action?: React.ReactNode;
+  icon?: React.ComponentType<{ className?: string }>;
+  className?: string;
 }) {
   return (
-    <div className="flex min-h-[200px] flex-col items-center justify-center gap-2 rounded-lg border border-dashed p-8 text-center">
-      <FileSearch className="h-8 w-8 text-muted-foreground/60" />
+    <div
+      className={cn(
+        'flex min-h-[200px] flex-col items-center justify-center gap-2 rounded-xl border border-dashed border-border bg-surface/40 p-8 text-center',
+        className,
+      )}
+    >
+      <span className="mb-1 inline-flex h-11 w-11 items-center justify-center rounded-full bg-card text-muted-foreground shadow-card ring-1 ring-border/70">
+        <Icon className="h-5 w-5" />
+      </span>
       <p className="text-sm font-medium">{title}</p>
       {hint ? <p className="max-w-sm text-xs text-muted-foreground">{hint}</p> : null}
       {action ? <div className="mt-2">{action}</div> : null}
@@ -80,8 +96,10 @@ export function ErrorState({ error, onRetry }: { error: unknown; onRetry?: () =>
         ? error.message
         : i18n.t('common:common.errorTitle');
   return (
-    <div className="flex min-h-[200px] flex-col items-center justify-center gap-2 rounded-lg border border-destructive/30 bg-destructive/5 p-8 text-center">
-      <TriangleAlert className="h-8 w-8 text-destructive/70" />
+    <div className="flex min-h-[200px] flex-col items-center justify-center gap-2 rounded-xl border border-destructive/25 bg-destructive/5 p-8 text-center">
+      <span className="mb-1 inline-flex h-11 w-11 items-center justify-center rounded-full bg-destructive/10 text-destructive">
+        <TriangleAlert className="h-5 w-5" />
+      </span>
       <p className="text-sm font-medium">{message}</p>
       {onRetry ? (
         <Button variant="outline" size="sm" onClick={onRetry}>
@@ -98,14 +116,14 @@ export function PageHeader({
   actions,
 }: {
   title: string;
-  description?: string;
+  description?: React.ReactNode;
   actions?: React.ReactNode;
 }) {
   return (
-    <div className="mb-4 flex flex-wrap items-start justify-between gap-3">
-      <div>
-        <h1 className="text-xl font-bold tracking-tight">{title}</h1>
-        {description ? <p className="mt-0.5 text-sm text-muted-foreground">{description}</p> : null}
+    <div className="mb-5 flex flex-wrap items-end justify-between gap-3">
+      <div className="min-w-0">
+        <h1 className="text-[1.45rem] font-semibold leading-tight tracking-tight">{title}</h1>
+        {description ? <p className="mt-1 text-sm text-muted-foreground">{description}</p> : null}
       </div>
       {actions ? <div className="flex flex-wrap items-center gap-2">{actions}</div> : null}
     </div>
@@ -113,7 +131,14 @@ export function PageHeader({
 }
 
 export function Skeleton({ className }: { className?: string }) {
-  return <div className={cn('animate-pulse rounded-md bg-muted', className)} />;
+  return (
+    <div
+      className={cn('relative overflow-hidden rounded-md bg-muted', className)}
+      aria-hidden
+    >
+      <div className="absolute inset-0 -translate-x-full animate-shimmer bg-gradient-to-r from-transparent via-card/60 to-transparent" />
+    </div>
+  );
 }
 
 /** Segmented control (period buttons, model buttons — PDF look). */
@@ -122,32 +147,43 @@ export function Segmented<T extends string | number>({
   value,
   onChange,
   size = 'default',
+  className,
 }: {
   options: Array<{ value: T; label: string }>;
   value: T;
   onChange: (v: T) => void;
   size?: 'default' | 'sm';
+  className?: string;
 }) {
   return (
-    <div className="inline-flex flex-wrap gap-1 rounded-lg border bg-card p-1" role="tablist">
-      {options.map((opt) => (
-        <button
-          key={String(opt.value)}
-          type="button"
-          role="tab"
-          aria-selected={opt.value === value}
-          onClick={() => onChange(opt.value)}
-          className={cn(
-            'rounded-md font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring',
-            size === 'sm' ? 'px-2.5 py-1 text-xs' : 'px-3 py-1.5 text-sm',
-            opt.value === value
-              ? 'bg-primary text-primary-foreground shadow-sm'
-              : 'text-muted-foreground hover:bg-muted hover:text-foreground',
-          )}
-        >
-          {opt.label}
-        </button>
-      ))}
+    <div
+      className={cn(
+        'inline-flex flex-wrap gap-0.5 rounded-lg border border-border/70 bg-muted/70 p-[3px]',
+        className,
+      )}
+      role="tablist"
+    >
+      {options.map((opt) => {
+        const active = opt.value === value;
+        return (
+          <button
+            key={String(opt.value)}
+            type="button"
+            role="tab"
+            aria-selected={active}
+            onClick={() => onChange(opt.value)}
+            className={cn(
+              'rounded-md font-medium transition-[background-color,color,box-shadow] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/50',
+              size === 'sm' ? 'px-2.5 py-1 text-xs' : 'px-3 py-1.5 text-sm',
+              active
+                ? 'bg-card text-foreground shadow-card ring-1 ring-border/60'
+                : 'text-muted-foreground hover:bg-card/50 hover:text-foreground',
+            )}
+          >
+            {opt.label}
+          </button>
+        );
+      })}
     </div>
   );
 }

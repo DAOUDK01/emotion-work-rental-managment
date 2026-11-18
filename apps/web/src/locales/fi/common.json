@@ -67,7 +67,8 @@
     "of": "/",
     "savedOk": "Tallennettu",
     "voidedOk": "Mitätöity",
-    "errorTitle": "Jokin meni pieleen"
+    "errorTitle": "Jokin meni pieleen",
+    "noChartData": "Näillä suodattimilla ei vielä ole tietoja"
   },
   "money": {
     "receivedBy": "Rahan vastaanottaja",
@@ -90,6 +91,20 @@
     "NOT_YET_BILLED": "Ei vielä laskutettu",
     "ACTIVE": "Aktiivinen",
     "VOID": "Mitätöity"
+  },
+  "shell": {
+    "brandSub": "Vuokraus · Huolto · Varaosat",
+    "openMenu": "Avaa valikko",
+    "closeMenu": "Sulje valikko",
+    "toggleTheme": "Vaihda tumma tila",
+    "language": "Suomeksi / In English",
+    "groups": {
+      "overview": "Yleiskatsaus",
+      "sales": "Myynti",
+      "operations": "Toiminnot",
+      "finance": "Talous",
+      "admin": "Hallinta"
+    }
   },
   "footer": { "tagline": "E Motion Works -järjestelmä — jokainen euro kirjataan" },
   "login": {

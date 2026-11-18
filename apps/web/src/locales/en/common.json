@@ -67,7 +67,8 @@
     "of": "of",
     "savedOk": "Saved",
     "voidedOk": "Voided",
-    "errorTitle": "Something went wrong"
+    "errorTitle": "Something went wrong",
+    "noChartData": "No data for these filters yet"
   },
   "money": {
     "receivedBy": "Amount received by",
@@ -90,6 +91,20 @@
     "NOT_YET_BILLED": "Not yet billed",
     "ACTIVE": "Active",
     "VOID": "Voided"
+  },
+  "shell": {
+    "brandSub": "Rental · Repair · Parts",
+    "openMenu": "Open menu",
+    "closeMenu": "Close menu",
+    "toggleTheme": "Toggle dark mode",
+    "language": "Suomeksi / In English",
+    "groups": {
+      "overview": "Overview",
+      "sales": "Sales",
+      "operations": "Operations",
+      "finance": "Finance",
+      "admin": "Admin"
+    }
   },
   "footer": { "tagline": "E Motion Works business system — every euro tracked" },
   "login": {
