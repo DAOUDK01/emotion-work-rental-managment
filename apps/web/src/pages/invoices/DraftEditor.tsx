@@ -6,7 +6,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { useTranslation } from 'react-i18next';
 import { toast } from 'sonner';
-import { ArrowLeft, Save } from 'lucide-react';
+import { ArrowLeft, Save, Send } from 'lucide-react';
 import { api, qs } from '@/lib/api';
 import { euroInputToCents } from '@/lib/format';
 import { Button, buttonVariants } from '@/components/ui/button';
@@ -158,10 +158,16 @@ export function DraftEditor({
       invoice
         ? api.put<InvoiceResponse>(`/invoices/${invoice.id}`, payload)
         : api.post<InvoiceResponse>('/invoices', payload),
-    onSuccess: (res) => {
-      queryClient.setQueryData(['invoices', res.invoice.id], res);
+    onSuccess: (res, payload) => {
+      queryClient.setQueryData(['invoices', res.invoice.id], { invoice: res.invoice });
       void queryClient.invalidateQueries({ queryKey: ['invoices'] });
-      toast.success(t('common:common.savedOk'));
+      if (res.sendError) {
+        toast.error(t('editor.savedNotSent', { reason: res.sendError.message }));
+      } else if (payload.send) {
+        toast.success(res.emailQueued ? t('send.doneEmailed', { email: res.invoice.emailedTo }) : t('send.doneNoEmail'));
+      } else {
+        toast.success(t('common:common.savedOk'));
+      }
       if (!invoice) {
         navigate(`/invoices/${res.invoice.id}`, { replace: true });
         return;
@@ -220,31 +226,44 @@ export function DraftEditor({
     return ok ? payload : null;
   };
 
-  const onSubmit = handleSubmit(
-    (values) => {
-      const linePayload = validateExtras();
-      if (!linePayload || !customer) return;
-      submittedRef.current = { header: values, snapshot: snapshot(customer, lines) };
-      save.mutate({
-        customerId: customer.id,
-        modelId: values.modelId ? Number(values.modelId) : null,
-        unitId: values.unitId ? Number(values.unitId) : null,
-        ...(!invoice && initial.rentalId ? { rentalId: initial.rentalId } : {}),
-        language: values.language,
-        issueDate: values.issueDate,
-        deliveryDate: values.deliveryDate || null,
-        periodText: values.periodText.trim() || null,
-        termsDays: Number(values.termsDays),
-        dueDate: values.dueDate,
-        notes: values.notes.trim() || null,
-        lines: linePayload,
-      });
-    },
-    () => {
-      validateExtras();
-      toast.error(t('validation.fixErrors'));
-    },
-  );
+  const submit = (send: boolean) =>
+    handleSubmit(
+      (values) => {
+        const linePayload = validateExtras();
+        if (!linePayload || !customer) return;
+        submittedRef.current = { header: values, snapshot: snapshot(customer, lines) };
+        save.mutate({
+          customerId: customer.id,
+          modelId: values.modelId ? Number(values.modelId) : null,
+          unitId: values.unitId ? Number(values.unitId) : null,
+          ...(!invoice && initial.rentalId ? { rentalId: initial.rentalId } : {}),
+          language: values.language,
+          issueDate: values.issueDate,
+          deliveryDate: values.deliveryDate || null,
+          periodText: values.periodText.trim() || null,
+          termsDays: Number(values.termsDays),
+          dueDate: values.dueDate,
+          notes: values.notes.trim() || null,
+          lines: linePayload,
+          send,
+        });
+      },
+      () => {
+        validateExtras();
+        toast.error(t('validation.fixErrors'));
+      },
+    )();
+  const onSubmit = () => submit(false);
+  const onSubmitAndSend = () => submit(true);
+
+  /** Where "Create & send" will email the invoice. `email` is undefined for a saved draft's customer (card not loaded). */
+  const sendHint = !customer
+    ? ''
+    : customer.email
+      ? t('editor.sendHintEmail', { email: customer.email })
+      : customer.email === undefined
+        ? t('editor.sendHintGeneric')
+        : t('editor.sendHintNoEmail');
 
   const modelName = (m: Lookups['models'][number]) => (i18n.language === 'fi' ? m.nameFi : m.nameEn);
 
@@ -258,8 +277,11 @@ export function DraftEditor({
             <Link to="/invoices" className={buttonVariants({ variant: 'ghost', size: 'sm' })}>
               <ArrowLeft className="h-4 w-4" /> {t('actions.backToList')}
             </Link>
-            <Button onClick={() => void onSubmit()} disabled={save.isPending}>
+            <Button variant="outline" onClick={() => void onSubmit()} disabled={save.isPending}>
               <Save className="h-4 w-4" /> {invoice ? t('editor.save') : t('editor.create')}
+            </Button>
+            <Button onClick={() => void onSubmitAndSend()} disabled={save.isPending} title={sendHint || undefined}>
+              <Send className="h-4 w-4" /> {invoice ? t('editor.saveAndSend') : t('editor.createAndSend')}
             </Button>
           </>
         }
@@ -390,8 +412,12 @@ export function DraftEditor({
         <span className="text-xs text-muted-foreground" aria-live="polite">
           {dirty ? t('editor.unsaved') : invoice ? t('editor.allSaved') : ''}
         </span>
-        <Button onClick={() => void onSubmit()} disabled={save.isPending}>
+        {sendHint ? <span className="text-xs text-muted-foreground">{sendHint}</span> : null}
+        <Button variant="outline" onClick={() => void onSubmit()} disabled={save.isPending}>
           <Save className="h-4 w-4" /> {invoice ? t('editor.save') : t('editor.create')}
+        </Button>
+        <Button onClick={() => void onSubmitAndSend()} disabled={save.isPending}>
+          <Send className="h-4 w-4" /> {invoice ? t('editor.saveAndSend') : t('editor.createAndSend')}
         </Button>
       </div>
     </div>

@@ -289,6 +289,27 @@ describe('invoices: Finnish reference, payments, credit note cancels', () => {
     const entryAfter = await prisma.entry.findFirst({ where: { invoiceId } });
     expect(entryAfter?.paymentStatus).toBe('PAID');
   });
+  it('create with send: true sends it and queues the email to the customer automatically', async () => {
+    const invoice = await post('/invoices').send({
+      customerId,
+      issueDate: '2026-11-03',
+      lines: [{ description: 'Auto-sent job', qty: 1, unitPriceCents: 25100, vatRateBp: 2550 }],
+      send: true,
+    });
+    expect(invoice.status, JSON.stringify(invoice.body)).toBe(201);
+    expect(invoice.body.invoice.status).toBe('SENT');
+    expect(invoice.body.invoice.emailedTo).toBe('testi@example.com');
+    expect(invoice.body.emailQueued).toBe(true);
+    const id = invoice.body.invoice.id;
+    const entry = await prisma.entry.findFirst({ where: { invoiceId: id } });
+    expect(entry?.paymentStatus).toBe('INVOICED');
+    const mail = await prisma.emailOutbox.findFirst({
+      where: { toAddress: 'testi@example.com' },
+      orderBy: { id: 'desc' },
+    });
+    expect(mail?.subject).toContain(invoice.body.invoice.numberFormatted);
+    expect(mail?.attachmentId).not.toBeNull();
+  });
   it('refuses a payment larger than what is still open (typo guard)', async () => {
     const invoice = await post('/invoices').send({
       customerId,

@@ -102,6 +102,8 @@ export const CreateInvoiceSchema = z.object({
   dueDate: isoDate.optional(),
   notes: z.string().trim().max(2000).nullish(),
   lines: z.array(InvoiceLineInput).min(1).max(200),
+  /** true = send right after saving (lock, book income, email the PDF to the customer). */
+  send: z.boolean().optional(),
 });
 export type CreateInvoiceBody = z.infer<typeof CreateInvoiceSchema>;
 

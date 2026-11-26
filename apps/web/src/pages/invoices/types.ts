@@ -133,6 +133,10 @@ export interface InvoiceDetail extends InvoiceListItem {
 
 export interface InvoiceResponse {
   invoice: InvoiceDetail;
+  /** Only when the request had `send: true`: the email was queued… */
+  emailQueued?: boolean;
+  /** …or the send was refused and the invoice stays a saved draft. */
+  sendError?: { code: string; message: string };
 }
 
 /** The slice of GET /lookups this screen needs. */
@@ -207,6 +211,8 @@ export interface InvoicePayload {
   dueDate: string;
   notes: string | null;
   lines: InvoiceLinePayload[];
+  /** Send right after saving (emails the PDF to the customer's address). */
+  send?: boolean;
 }
 
 /** One row of the DRAFT lines editor — money kept as strings until submit. */

@@ -2,6 +2,7 @@
 import type { Prisma } from '@prisma/client';
 import { todayInHelsinki, type ISODate } from '@emotionfix/shared';
 import { prisma } from '../../db.js';
+import { AppError } from '../../errors.js';
 import { requireAuth } from '../../middleware/auth.js';
 import { validate } from '../../middleware/validate.js';
 import {
@@ -205,6 +206,22 @@ invoicesRouter.get('/overdue', validate({ query: OverdueQuery }), async (req, re
 
 // ---------------------------------------------------------------- create / read / update
 
+/**
+ * `send: true` on create/update: send straight after saving, to the customer's email.
+ * The draft is already saved, so a refused send (e.g. rental already paid) is reported
+ * as `sendError` next to the saved draft instead of failing the whole request.
+ */
+async function sendAfterSave(
+  id: number,
+): Promise<{ emailQueued: boolean } | { sendError: { code: string; message: string } }> {
+  try {
+    return await sendInvoice(id);
+  } catch (err) {
+    if (err instanceof AppError) return { sendError: { code: err.code, message: err.message } };
+    throw err;
+  }
+}
+
 invoicesRouter.post(
   '/',
   requireAuth('ADMIN', 'STAFF'),
@@ -213,7 +230,8 @@ invoicesRouter.post(
     try {
       const body = req.body as CreateInvoiceBody;
       const id = await createInvoice(body);
-      res.status(201).json({ invoice: serializeInvoiceDetail(await loadInvoiceDetail(id), todayInHelsinki()) });
+      const sent = body.send ? await sendAfterSave(id) : {};
+      res.status(201).json({ invoice: serializeInvoiceDetail(await loadInvoiceDetail(id), todayInHelsinki()), ...sent });
     } catch (err) {
       next(err);
     }
@@ -238,7 +256,8 @@ invoicesRouter.put(
       const { id } = req.params as unknown as { id: number };
       const body = req.body as UpdateInvoiceBody;
       await updateInvoice(id, body);
-      res.json({ invoice: serializeInvoiceDetail(await loadInvoiceDetail(id), todayInHelsinki()) });
+      const sent = body.send ? await sendAfterSave(id) : {};
+      res.json({ invoice: serializeInvoiceDetail(await loadInvoiceDetail(id), todayInHelsinki()), ...sent });
     } catch (err) {
       next(err);
     }
